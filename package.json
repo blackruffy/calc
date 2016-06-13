@@ -1,0 +1,31 @@
+{
+  "name": "calc",
+  "version": "1.0.0",
+  "description": "calculator",
+  "main": "index.js",
+  "scripts": {
+    "tsc": "tsc",
+    "browserify": "gulp browserify",
+    "test": "gulp mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/blackruffy/calc.git"
+  },
+  "author": "Taichi Kubo",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/blackruffy/calc/issues"
+  },
+  "homepage": "https://github.com/blackruffy/calc#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "browserify": "^13.0.1",
+    "gulp": "^3.9.1",
+    "gulp-mocha": "^2.2.0",
+    "mocha": "^2.5.3",
+    "typescript": "^1.8.10",
+    "typings": "^1.0.5",
+    "vinyl-source-stream": "^1.1.0"
+  }
+}
