@@ -4,13 +4,11 @@ import { CharParser,
          char,
          success,
          alphabet,
-         oneOf
+         oneOf,
+         spaces
        } from "../src/ParserCombinator"
 
-interface Token {
-}
-
-class Identifier implements Token {
+abstract class Identifier {
     private data: string;
     constructor( x: string ) {
         this.data = x;
@@ -24,57 +22,104 @@ class Num extends Identifier {}
 
 class Var extends Identifier {}
 
-class Pow implements Token {
-    constructor( expr1: Expr, expr2: Expr ) {
+class Defun {
+    constructor( varn: Var, args: Array<Var> ) {
     }
 }
 
-interface Fact {
-}
-
-class ExprFact implements Fact {
-    constructor( expr: Expr ) {
+class FunCall {
+    constructor( varn: Var, exprs: Array<ExprPM> ) {
     }
 }
 
-class FuncFact implements Fact {
+abstract class Fact {
+}
+
+class FuncFact extends Fact {
     constructor( funcall: FunCall ) {
+        super()
     }
 }
 
-interface Term {
+class VarFact extends Fact {
+    constructor( varn: Var ) {
+        super()
+    }
 }
 
-class FactTerm implements Term {
+class NumFact extends Fact {
+    constructor( num: Num ) {
+        super()
+    }
+}
+
+class ExprFact extends
+Fact {
+    constructor( expr: ExprPM ) {
+        super()
+    }
+}
+
+class NegFact extends Fact {
     constructor( fact: Fact ) {
+        super()
     }
 }
 
-class MultTerm implements Term {
+abstract class Term {
+}
+
+class FactTerm extends Term {
+    constructor( fact: Fact ) {
+        super()
+    }
+}
+
+class PowTerm extends Term {
     constructor( term: Term, fact: Fact ) {
+        super()
     }
 }
 
-class DivTerm implements Term {
-    constructor( term: Term, fact: Fact ) {
-    }
+abstract class ExprMD {
 }
 
-interface Expr {
-}
-
-class TermExpr implements Expr {
+class TermExprMD extends ExprMD {
     constructor( term: Term ) {
+        super()
     }
 }
 
-class PlusExpr implements Expr {
-    constructor( expr: Expr, term: Term ) {
+class MultExprMD extends ExprMD {
+    constructor( expr: ExprMD, term: Term ) {
+        super()
     }
 }
 
-class MinusExpr implements Expr {
-    constructor( expr: Expr, term: Term ) {
+class DivExprMD extends ExprMD {
+    constructor( expr: ExprMD, term: Term ) {
+        super()
+    }
+}
+
+abstract class ExprPM {
+}
+
+class MDExprPM extends ExprPM {
+    constructor( expr: ExprMD ) {
+        super()
+    }
+}
+
+class PlusExprPM extends ExprPM {
+    constructor( expr1: ExprPM, expr2: ExprMD ) {
+        super()
+    }
+}
+
+class MinusExprPM extends ExprPM {
+    constructor( expr1: ExprPM, expr2: ExprMD ) {
+        super()
     }
 }
 
@@ -105,35 +150,36 @@ function varname(): CharParser<Var> {
 //         expr().flatMap(
 //             e => spaces().bind(char(')')).map(
 // }
-// 
-// function term(): CharParser<Term> {
-//     return fact().map( f => new FactTerm(f) )
-//         .or(term().flatMap(
-//             x => spaces()
-//                 .bind(char('*'))
-//                 .bind(spaces())
-//                 .bind(fact()).flatMap(
-//                     y => new MultTerm(x, y) ) ) )
-//         .or(expr().flatMap(
-//             x => spaces()
-//                 .bind(char('/'))
-//                 .bind(spaces())
-//                 .bind(term()).flatMap(
-//                     y => new DivExpr(x, y) ) ) )
-// }
-// 
-// function expr(): CharParser<Expr> {
-//     return term().map( t => new TermExpr(t) )
-//         .or(expr().flatMap(
-//             x => spaces()
-//                 .bind(char('+'))
-//                 .bind(spaces())
-//                 .bind(term()).flatMap(
-//                     y => new PlusExpr(x, y) ) ) )
-//         .or(expr().flatMap(
-//             x => spaces()
-//                 .bind(char('-'))
-//                 .bind(spaces())
-//                 .bind(term()).flatMap(
-//                     y => new MinusExpr(x, y) ) ) )
-// }
+
+function exprmd(): CharParser<Term> {
+    return null
+    //return fact().map( f => new FactTerm(f) )
+    //    .or(term().flatMap(
+    //        x => spaces()
+    //            .bind(char('*'))
+    //            .bind(spaces())
+    //            .bind(fact()).flatMap(
+    //                y => new MultTerm(x, y) ) ) )
+    //    .or(expr().flatMap(
+    //        x => spaces()
+    //            .bind(char('/'))
+    //            .bind(spaces())
+    //            .bind(term()).flatMap(
+    //                y => new DivExpr(x, y) ) ) )
+}
+
+function exprpm(): CharParser<ExprPM> {
+    return exprmd().map( t => new MDExprPM(t) )
+        .or(exprpm().flatMap(
+            x => spaces()
+                .bind(char('+'))
+                .bind(spaces())
+                .bind(exprmd()).map(
+                    y => new PlusExprPM(x, y) ) ) )
+        .or(exprpm().flatMap(
+            x => spaces()
+                .bind(char('-'))
+                .bind(spaces())
+                .bind(exprmd()).map(
+                    y => new MinusExprPM(x, y) ) ) )
+}
