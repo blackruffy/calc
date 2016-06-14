@@ -7,14 +7,16 @@ import { Stream } from "./ParserStream"
 export interface Result<A, B> {
     flatMap<C>( func: (s: Stream<A>, b: B) => Result<A, C> ): Result<A, C>
 
-    getStream(): Stream<A>
-    isSuccess(): boolean
+    orElse( func: (s: Stream<A>, e: string) => Result<A, B> ): Result<A, B>;
+    getDataOrElse( func: () => B ): B;
+    getStream(): Stream<A>;
+    isSuccess(): boolean;
 }
 
 /**
  * パースが成功した時に用いるクラス
  */
-export class Success<A, B> {
+export class Success<A, B> implements Result<A, B> {
     private stream: Stream<A>;
     private data: B;
     
@@ -27,6 +29,14 @@ export class Success<A, B> {
         return func( this.stream, this.data )
     }
 
+    orElse( func: (s: Stream<A>, e: string) => Result<A, B> ): Result<A, B> {
+        return this;
+    }
+
+    getDataOrElse( func: () => B ): B {
+        return this.data;
+    }
+    
     getStream(): Stream<A> {
         return this.stream
     }
@@ -43,7 +53,7 @@ export class Success<A, B> {
 /**
  * パースが失敗したときに用いるクラス
  */
-export class Failure<A, B> {
+export class Failure<A, B> implements Result<A, B> {
     private stream: Stream<A>;
     private msg: string;
     
@@ -53,9 +63,17 @@ export class Failure<A, B> {
     }
 
     flatMap<C>( func: (s: Stream<A>, data: B) => Result<A, C> ): Result<A, C> {
-        return new Failure(this.stream, this.msg);
+        return new Failure<A, C>(this.stream, this.msg);
     }
 
+    orElse( func: (s: Stream<A>, e: string) => Result<A, B> ): Result<A, B> {
+        return func(this.stream, this.msg);
+    }
+    
+    getDataOrElse( func: () => B ): B {
+        return func();
+    }
+    
     getStream(): Stream<A> {
         return this.stream
     }

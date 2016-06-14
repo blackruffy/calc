@@ -16,7 +16,7 @@ export class CharStream implements Stream<Char> {
     private row: number
     private col: number
     
-    constructor( doc: string, index: number, row: number, col: number ) {
+    constructor( doc: string, index: number = 0, row: number = 0, col: number = 0 ) {
         this.doc = doc
         this.index = index
         const nl = isNewLine(doc, index)
@@ -38,6 +38,10 @@ export class CharStream implements Stream<Char> {
     
     position() {
         return new Position(this.row, this.col, this.index, getLine( this.doc, this.index - this.col + 1 ) )
+    }
+
+    toString() {
+        return this.doc.slice(this.index)
     }
     
 }
