@@ -8,7 +8,7 @@ import { CharParser,
          spaces
        } from "../src/ParserCombinator"
 
-abstract class Identifier {
+export abstract class Identifier {
     private data: string;
     constructor( x: string ) {
         this.data = x;
@@ -18,168 +18,299 @@ abstract class Identifier {
     }
 }
 
-class Num extends Identifier {}
+export class Num extends Identifier {}
 
-class Var extends Identifier {}
+export class Var extends Identifier {}
 
-class Defun {
-    constructor( varn: Var, args: Array<Var> ) {
+export abstract class Def {
+}
+
+export class Defvar extends Def {
+    name: Var;
+    expr: ExprPM;
+
+    constructor( name: Var, expr: ExprPM ) {
+        super()
+        this.name = name
+        this.expr = expr
     }
 }
 
-class FunCall {
-    constructor( varn: Var, exprs: Array<ExprPM> ) {
+export class Defun extends Def {
+    name: Var;
+    args: Array<Var>;
+    expr: ExprPM;
+    
+    constructor( name: Var, args: Array<Var>, expr: ExprPM ) {
+        super()
+        this.name = name
+        this.args = args
+        this.expr = expr
     }
 }
 
-abstract class Fact {
+export class FunCall {
+    name: Var;
+    args: Array<ExprPM>;
+    constructor( name: Var, args: Array<ExprPM> ) {
+        this.name = name
+        this.args = args
+    }
 }
 
-class FuncFact extends Fact {
+export abstract class Fact {
+}
+
+export class FuncFact extends Fact {
+    funcall: FunCall
     constructor( funcall: FunCall ) {
         super()
+        this.funcall = funcall
     }
 }
 
-class VarFact extends Fact {
+export class VarFact extends Fact {
+    varname: Var
     constructor( varn: Var ) {
         super()
+        this.varname = varn
     }
 }
 
-class NumFact extends Fact {
+export class NumFact extends Fact {
+    num: Num
     constructor( num: Num ) {
         super()
+        this.num = num
     }
 }
 
-class ExprFact extends
-Fact {
+export class ExprFact extends Fact {
+    expr: ExprPM
     constructor( expr: ExprPM ) {
         super()
+        this.expr = expr
     }
 }
 
-class NegFact extends Fact {
+export class NegFact extends Fact {
+    fact: Fact
     constructor( fact: Fact ) {
         super()
+        this.fact = fact
     }
 }
 
-abstract class Term {
+export abstract class Term {
 }
 
-class FactTerm extends Term {
+export class FactTerm extends Term {
+    fact: Fact
     constructor( fact: Fact ) {
         super()
+        this.fact = fact
     }
 }
 
-class PowTerm extends Term {
-    constructor( term: Term, fact: Fact ) {
+export class PowTerm extends Term {
+    base: Fact
+    pow: Term
+    constructor( base: Fact, pow: Term ) {
         super()
+        this.base = base
+        this.pow = pow
     }
 }
 
-abstract class ExprMD {
+export abstract class ExprMD {
 }
 
-class TermExprMD extends ExprMD {
+export class TermExprMD extends ExprMD {
+    term: Term
     constructor( term: Term ) {
         super()
+        this.term = term
     }
 }
 
-class MultExprMD extends ExprMD {
-    constructor( expr: ExprMD, term: Term ) {
+export class MultExprMD extends ExprMD {
+    term: Term
+    expr: ExprMD
+    constructor( term: Term, expr: ExprMD ) {
         super()
+        this.term = term
+        this.expr = expr
     }
 }
 
-class DivExprMD extends ExprMD {
-    constructor( expr: ExprMD, term: Term ) {
+export class DivExprMD extends ExprMD {
+    term: Term
+    expr: ExprMD
+    constructor( term: Term, expr: ExprMD ) {
         super()
+        this.term = term
+        this.expr = expr
     }
 }
 
-abstract class ExprPM {
+export abstract class ExprPM {
 }
 
-class MDExprPM extends ExprPM {
+export class MDExprPM extends ExprPM {
+    expr: ExprMD
     constructor( expr: ExprMD ) {
         super()
+        this.expr = expr
     }
 }
 
-class PlusExprPM extends ExprPM {
-    constructor( expr1: ExprPM, expr2: ExprMD ) {
+export class PlusExprPM extends ExprPM {
+    expr1: ExprMD
+    expr2: ExprPM
+    constructor( expr1: ExprMD, expr2: ExprPM ) {
         super()
+        this.expr1 = expr1
+        this.expr2 = expr2 
     }
+
 }
 
-class MinusExprPM extends ExprPM {
-    constructor( expr1: ExprPM, expr2: ExprMD ) {
+export class MinusExprPM extends ExprPM {
+    expr1: ExprMD
+    expr2: ExprPM
+    constructor( expr1: ExprMD, expr2: ExprPM ) {
         super()
+        this.expr1 = expr1
+        this.expr2 = expr2
     }
 }
 
-function integer(): CharParser<Num> {
-    return digit().flatMap(
-        x => integer().map(
-            xs => new Num(x + xs.getData()) ) )
+export function integer(): CharParser<Num> {
+    return digit().manyStr1().map( s => new Num(s) )
 }
 
-function float(): CharParser<Num> {
+export function num(): CharParser<Num> {
     return integer().flatMap(
-        x => char('.').flatMap(
-            _ => integer().map(
-                y => new Num(x.getData() + '.' + y.getData()) ) )
-            .or( success<string, Num>( x ) ) )
+        x => char('.').bind(integer).map(
+            y => new Num(x.getData() + '.' + y.getData()) )
+            .rollback()
+            .or( () => success<string, Num>( () => x ) ) )
 }
 
-function varname(): CharParser<Var> {
-    return alphabet().or( oneOf('_') ).flatMap(
-        a => alphabet()
-            .or( digit() )
-            .or( oneOf('_') ).manyStr().map(
-                as => new Var(a + as) ) )
+export function varname(): CharParser<Var> {
+    return alphabet()
+        .rollback()
+        .or( () => oneOf('_') ).flatMap(
+            a => alphabet()
+                .rollback()
+                .or( digit )
+                .rollback()
+                .or( () => oneOf('_') ).manyStr().map(
+                    as => new Var(a + as) ) )
 }
 
-// function fact(): CharParser<Fact> {
-//     return char('(').bind(spaces()).bind(
-//         expr().flatMap(
-//             e => spaces().bind(char(')')).map(
-// }
-
-function exprmd(): CharParser<Term> {
-    return null
-    //return fact().map( f => new FactTerm(f) )
-    //    .or(term().flatMap(
-    //        x => spaces()
-    //            .bind(char('*'))
-    //            .bind(spaces())
-    //            .bind(fact()).flatMap(
-    //                y => new MultTerm(x, y) ) ) )
-    //    .or(expr().flatMap(
-    //        x => spaces()
-    //            .bind(char('/'))
-    //            .bind(spaces())
-    //            .bind(term()).flatMap(
-    //                y => new DivExpr(x, y) ) ) )
+export function funcall(): CharParser<FunCall> {
+    return varname().flatMap(
+        vn => char('(')
+            .bind(spaces)
+            .bind(() => exprpm()
+                  .sepBy(() => spaces()
+                         .bind(() => char(','))
+                         .bind(spaces))
+                  .flatMap(
+                      es => spaces().bind(() => char(')')).map(
+                          _ => new FunCall(vn, es) ) ) ) )
 }
 
-function exprpm(): CharParser<ExprPM> {
-    return exprmd().map( t => new MDExprPM(t) )
-        .or(exprpm().flatMap(
+export function fact(): CharParser<Fact> {
+    return funcall().map( fc => new FuncFact( fc ) )
+        .rollback()
+        .or( () => varname().map( vn => new VarFact( vn ) ) )
+        .rollback()
+        .or( () => num().map( n => new NumFact( n ) ) )
+        .rollback()
+        .or( () => char('(')
+             .bind(spaces)
+             .bind(exprpm)
+             .flatMap(
+                 e => spaces()
+                     .bind(() => char(')'))
+                     .map( _ => new ExprFact( e ) ) ) )
+        .rollback()
+        .or( () => char('-')
+             .bind(spaces)
+             .bind(fact)
+             .map( f => new NegFact(f) ) )
+}
+
+export function term(): CharParser<Term> {
+    return fact().flatMap(
+        t => spaces()
+            .bind(() => char('^'))
+            .bind(spaces)
+            .bind(term).map(
+                f => new PowTerm(t, f) ) )
+        .rollback()
+        .or(() => fact().map( f => new FactTerm(f) ) )
+}
+
+export function exprmd(): CharParser<ExprMD> {
+    return term().flatMap(
+        x => spaces()
+            .bind(() => char('*'))
+            .bind(spaces)
+            .bind(exprmd).map(
+                y => new MultExprMD(x, y) ) )
+        .rollback()
+        .or(() => term().flatMap(
             x => spaces()
-                .bind(char('+'))
-                .bind(spaces())
-                .bind(exprmd()).map(
-                    y => new PlusExprPM(x, y) ) ) )
-        .or(exprpm().flatMap(
+                .bind(() => char('/'))
+                .bind(spaces)
+                .bind(exprmd).map(
+                    y => new DivExprMD(x, y) ) ) )
+        .rollback()
+        .or(() => term().map( t => new TermExprMD(t) ))
+}
+
+export function exprpm(): CharParser<ExprPM> {
+    return exprmd().flatMap(
             x => spaces()
-                .bind(char('-'))
-                .bind(spaces())
-                .bind(exprmd()).map(
+                .bind(() => char('+'))
+                .bind(spaces)
+                .bind(exprpm).map(
+                    y => new PlusExprPM(x, y) ) )
+        .rollback()
+        .or(() => exprmd().flatMap(
+            x => spaces()
+                .bind(() => char('-'))
+                .bind(spaces)
+                .bind(exprpm).map(
                     y => new MinusExprPM(x, y) ) ) )
+        .rollback()
+        .or(() => exprmd().map( t => new MDExprPM(t) ) ) 
+}
+
+export function defun(): CharParser<Def> {
+    return varname().flatMap(
+        vn => char('(')
+            .bind(spaces)
+            .bind(() => varname()
+                  .sepBy(() => spaces()
+                         .bind(() => char(','))
+                         .bind(spaces))
+                  .flatMap(
+                      vs => spaces()
+                          .bind(() => char(')'))
+                          .bind(spaces)
+                          .bind(() => char('='))
+                          .bind(spaces)
+                          .bind(exprpm)
+                          .map(e => new Defun(vn, vs, e ) ) ) ) )
+        .rollback()
+        .or(() => varname().flatMap(
+            vn => spaces()
+                .bind(() => char('='))
+                .bind(spaces)
+                .bind(exprpm)
+                .map(e => new Defvar(vn, e)) ) )
 }

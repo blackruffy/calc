@@ -3,6 +3,7 @@
  */
 
 import { Stream } from "./ParserStream"
+import { Either, Right, Left } from "./Either"
 
 export interface Result<A, B> {
     flatMap<C>( func: (s: Stream<A>, b: B) => Result<A, C> ): Result<A, C>
@@ -10,6 +11,7 @@ export interface Result<A, B> {
     orElse( func: (s: Stream<A>, e: string) => Result<A, B> ): Result<A, B>;
     getDataOrElse( func: () => B ): B;
     getStream(): Stream<A>;
+    getData(): Either<string, B>;
     isSuccess(): boolean;
 }
 
@@ -41,8 +43,8 @@ export class Success<A, B> implements Result<A, B> {
         return this.stream
     }
 
-    getData(): B {
-        return this.data
+    getData(): Either<string, B> {
+        return new Right<string, B>(this.data)
     }
     
     isSuccess() {
@@ -78,8 +80,8 @@ export class Failure<A, B> implements Result<A, B> {
         return this.stream
     }
 
-    getMessage(): string {
-        return this.msg;
+    getData(): Either<string, B> {
+        return new Left<string, B>(this.msg);
     }
     
     isSuccess() {
