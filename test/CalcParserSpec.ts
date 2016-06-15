@@ -226,7 +226,15 @@ describe('exprpm', function () {
             runParser(Calc.exprpm(), '123 + 456'),
             right(new Calc.PlusExprPM(
                 new Calc.TermExprMD(new Calc.FactTerm(new Calc.NumFact(new Calc.Num('123')))),
-                new Calc.TermExprMD(new Calc.FactTerm(new Calc.NumFact(new Calc.Num('456'))))
+                new Calc.MDExprPM(
+                    new Calc.TermExprMD(
+                        new Calc.FactTerm(
+                            new Calc.NumFact(
+                                new Calc.Num('456')
+                            )
+                        )
+                    )
+                )
             ))
         )
     })
