@@ -18,11 +18,16 @@ export abstract class Identifier {
     }
 }
 
-export class Num extends Identifier {}
+export class Num extends Identifier {
+    private __num__: Num
+}
 
-export class Var extends Identifier {}
+export class Var extends Identifier {
+    private __var__: Var
+}
 
 export abstract class Def {
+    private __def__: Def;
 }
 
 export class Defvar extends Def {
@@ -59,6 +64,7 @@ export class FunCall {
 }
 
 export abstract class Fact {
+    private __fact__: Fact;
 }
 
 export class FuncFact extends Fact {
@@ -102,6 +108,7 @@ export class NegFact extends Fact {
 }
 
 export abstract class Term {
+    private __term__: Term
 }
 
 export class FactTerm extends Term {
@@ -123,6 +130,7 @@ export class PowTerm extends Term {
 }
 
 export abstract class ExprMD {
+    private __exprmd__: ExprMD;
 }
 
 export class TermExprMD extends ExprMD {
@@ -154,6 +162,7 @@ export class DivExprMD extends ExprMD {
 }
 
 export abstract class ExprPM {
+    private __exprpm__: ExprPM
 }
 
 export class MDExprPM extends ExprPM {

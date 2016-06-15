@@ -155,19 +155,28 @@ describe('term', function () {
     it('could be term 1', function () {
         assert.deepEqual(
             runParser(Calc.term(), '123^2'),
-            right(new Calc.PowTerm(new Calc.NumFact(new Calc.Num('123')), new Calc.NumFact(new Calc.Num('2'))))
+            right(new Calc.PowTerm(
+                new Calc.NumFact(new Calc.Num('123')),
+                new Calc.FactTerm(new Calc.NumFact(new Calc.Num('2')))
+            ))
         )
     })
     it('could be term 2', function () {
         assert.deepEqual(
             runParser(Calc.term(), 'a^b'),
-            right(new Calc.PowTerm(new Calc.VarFact(new Calc.Var('a')), new Calc.VarFact(new Calc.Var('b'))))
+            right(new Calc.PowTerm(
+                new Calc.VarFact(new Calc.Var('a')),
+                new Calc.FactTerm(new Calc.VarFact(new Calc.Var('b')))
+            ))
         )
     })
     it('could be term 3', function () {
         assert.deepEqual(
             runParser(Calc.term(), 'a ^  b'),
-            right(new Calc.PowTerm(new Calc.VarFact(new Calc.Var('a')), new Calc.VarFact(new Calc.Var('b'))))
+            right(new Calc.PowTerm(
+                new Calc.VarFact(new Calc.Var('a')),
+                new Calc.FactTerm(new Calc.VarFact(new Calc.Var('b')))
+            ))
         )
     })
     it('could be term 4', function () {
@@ -184,7 +193,7 @@ describe('exprmd', function () {
             runParser(Calc.exprmd(), '123 * 456'),
             right(new Calc.MultExprMD(
                 new Calc.FactTerm(new Calc.NumFact(new Calc.Num('123'))),
-                new Calc.FactTerm(new Calc.NumFact(new Calc.Num('456')))
+                new Calc.TermExprMD(new Calc.FactTerm(new Calc.NumFact(new Calc.Num('456'))))
             ))
         )
     })
@@ -193,7 +202,7 @@ describe('exprmd', function () {
             runParser(Calc.exprmd(), 'abc * 2'),
             right(new Calc.MultExprMD(
                 new Calc.FactTerm(new Calc.VarFact(new Calc.Var('abc'))),
-                new Calc.FactTerm(new Calc.NumFact(new Calc.Num('2')))
+                new Calc.TermExprMD(new Calc.FactTerm(new Calc.NumFact(new Calc.Num('2'))))
             ))
         )
     })
@@ -202,7 +211,7 @@ describe('exprmd', function () {
             runParser(Calc.exprmd(), '123 / 456'),
             right(new Calc.DivExprMD(
                 new Calc.FactTerm(new Calc.NumFact(new Calc.Num('123'))),
-                new Calc.FactTerm(new Calc.NumFact(new Calc.Num('456')))
+                new Calc.TermExprMD(new Calc.FactTerm(new Calc.NumFact(new Calc.Num('456'))))
             ))
         )
     })
@@ -211,10 +220,10 @@ describe('exprmd', function () {
             runParser(Calc.exprmd(), '123 * 456 ^ abc'),
             right(new Calc.MultExprMD(
                 new Calc.FactTerm(new Calc.NumFact(new Calc.Num('123'))),
-                new Calc.PowTerm(
+                new Calc.TermExprMD(new Calc.PowTerm(
                     new Calc.NumFact(new Calc.Num('456')),
-                    new Calc.VarFact(new Calc.Var('abc'))
-                )
+                    new Calc.FactTerm(new Calc.VarFact(new Calc.Var('abc')))
+                ))
             ))
         )
     })
@@ -226,15 +235,7 @@ describe('exprpm', function () {
             runParser(Calc.exprpm(), '123 + 456'),
             right(new Calc.PlusExprPM(
                 new Calc.TermExprMD(new Calc.FactTerm(new Calc.NumFact(new Calc.Num('123')))),
-                new Calc.MDExprPM(
-                    new Calc.TermExprMD(
-                        new Calc.FactTerm(
-                            new Calc.NumFact(
-                                new Calc.Num('456')
-                            )
-                        )
-                    )
-                )
+                new Calc.MDExprPM(new Calc.TermExprMD(new Calc.FactTerm(new Calc.NumFact(new Calc.Num('456')))))
             ))
         )
     })
@@ -243,30 +244,34 @@ describe('exprpm', function () {
             runParser(Calc.exprpm(), '123 + 456 / 3'),
             right(new Calc.PlusExprPM(
                 new Calc.TermExprMD(new Calc.FactTerm(new Calc.NumFact(new Calc.Num('123')))),
-                new Calc.DivExprMD(
+                new Calc.MDExprPM(new Calc.DivExprMD(
                     new Calc.FactTerm(new Calc.NumFact(new Calc.Num('456'))),
-                    new Calc.FactTerm(new Calc.NumFact(new Calc.Num('3')))
-                )
+                    new Calc.TermExprMD(new Calc.FactTerm(new Calc.NumFact(new Calc.Num('3'))))
+                ))
             ))
         )
     })
 })
 
-//describe('defun', function () {
-//    it('could be defun 1', function () {
-//        assert.deepEqual(
-//            runParser(Calc.defun(), 'hoge(x, y, z) = x + y + z'),
-//            right(new Calc.Defun(
-//                new Calc.Var('hoge'),
-//                [
-//                    new Calc.Var('x'),
-//                    new Calc.Var('y'),
-//                    new Calc.Var('z')
-//                ],
-//                
-//                new Calc.TermExprMD(new Calc.FactTerm(new Calc.NumFact(new Calc.Num('123')))),
-//                new Calc.TermExprMD(new Calc.FactTerm(new Calc.NumFact(new Calc.Num('456'))))
-//            ))
-//        )
-//    })
-//})
+describe('defun', function () {
+    it('could be defun 1', function () {
+        assert.deepEqual(
+            runParser(Calc.defun(), 'hoge(x, y, z) = x + y + z'),
+            right(new Calc.Defun(
+                new Calc.Var('hoge'),
+                [
+                    new Calc.Var('x'),
+                    new Calc.Var('y'),
+                    new Calc.Var('z')
+                ],
+                new Calc.PlusExprPM(
+                    new Calc.TermExprMD(new Calc.FactTerm(new Calc.VarFact(new Calc.Var('x')))),
+                    new Calc.PlusExprPM(
+                        new Calc.TermExprMD(new Calc.FactTerm(new Calc.VarFact(new Calc.Var('y')))),
+                        new Calc.MDExprPM(new Calc.TermExprMD(new Calc.FactTerm(new Calc.VarFact(new Calc.Var('z')))))
+                    )
+                )
+            ))
+        )
+    })
+})
