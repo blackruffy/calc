@@ -6,7 +6,12 @@ import { CharParser,
          alphabet,
          oneOf,
          spaces
-       } from "../src/ParserCombinator"
+       } from "./ParserCombinator"
+
+import { Result } from "./ParserResult"
+import { CharStream } from "./ParserStream"
+
+type Char = string
 
 export abstract class Identifier {
     private data: string;
@@ -152,6 +157,18 @@ export class MultExprMD extends ExprMD {
 }
 
 export class DivExprMD extends ExprMD {
+    private __divexprmd__: DivExprMD;
+    term: Term
+    expr: ExprMD
+    constructor( term: Term, expr: ExprMD ) {
+        super()
+        this.term = term
+        this.expr = expr
+    }
+}
+
+export class ModExprMD extends ExprMD {
+    private __modexprmd__: ModExprMD;
     term: Term
     expr: ExprMD
     constructor( term: Term, expr: ExprMD ) {
@@ -174,6 +191,7 @@ export class MDExprPM extends ExprPM {
 }
 
 export class PlusExprPM extends ExprPM {
+    private __plusexprpm__: PlusExprPM;
     expr1: ExprMD
     expr2: ExprPM
     constructor( expr1: ExprMD, expr2: ExprPM ) {
@@ -185,6 +203,7 @@ export class PlusExprPM extends ExprPM {
 }
 
 export class MinusExprPM extends ExprPM {
+    private __minusexprpm__: MinusExprPM
     expr1: ExprMD
     expr2: ExprPM
     constructor( expr1: ExprMD, expr2: ExprPM ) {
@@ -192,6 +211,92 @@ export class MinusExprPM extends ExprPM {
         this.expr1 = expr1
         this.expr2 = expr2
     }
+}
+
+type Statement = ExprPM | Def
+
+export function isDef( s: Statement ) {
+    return s instanceof Def
+}
+
+export function isExpr( s: Statement ) {
+    return s instanceof ExprPM
+}
+
+export function toPM( md: ExprMD ): ExprPM {
+    return new MDExprPM( md )
+}
+
+export function plus( expr1: ExprMD, expr2: ExprPM ): ExprPM {
+    return new PlusExprPM( expr1, expr2 )
+}
+
+export function minus( expr1: ExprMD, expr2: ExprPM ): ExprPM {
+    return new MinusExprPM( expr1, expr2 )
+}
+
+export function toMD( term: Term ): ExprMD {
+    return new TermExprMD( term )
+}
+
+export function mult( term: Term, expr: ExprMD ): ExprMD {
+    return new MultExprMD( term, expr )
+}
+
+export function div( term: Term, expr: ExprMD ): ExprMD {
+    return new DivExprMD( term, expr )
+}
+
+export function mod( term: Term, expr: ExprMD ): ExprMD {
+    return new ModExprMD( term, expr )
+}
+
+export function toTerm( fact: Fact ): Term {
+    return new FactTerm( fact )
+}
+
+export function pow( base: Fact, pow: Term ): Term {
+    return new PowTerm( base, pow )
+}
+
+export function ffun( funcall: FunCall ): Fact {
+    return new FuncFact( funcall )
+}
+
+export function fvar( name: Var ): Fact {
+    return new VarFact( name )
+}
+
+export function fnum( num: Num ): Fact {
+    return new NumFact( num )
+}
+
+export function fexpr( expr: ExprPM ): Fact {
+    return new ExprFact( expr )
+}
+
+export function fneg( fact: Fact ): Fact {
+    return new NegFact( fact )
+}
+
+export function mkvar( x: string ): Var {
+    return new Var( x )
+}
+
+export function mknum( x: string ): Num {
+    return new Num( x )
+}
+
+export function mkfun( name: Var, args: Array<ExprPM> ): FunCall {
+    return new FunCall( name, args )
+}
+
+export function defvar( name: Var, expr: ExprPM ): Def {
+    return new Defvar( name, expr )
+}
+
+export function defun( name: Var, args: Array<Var>, expr: ExprPM ): Def {
+    return new Defun( name, args, expr )
 }
 
 export function integer(): CharParser<Num> {
@@ -278,6 +383,13 @@ export function exprmd(): CharParser<ExprMD> {
                 .bind(exprmd).map(
                     y => new DivExprMD(x, y) ) ) )
         .rollback()
+        .or(() => term().flatMap(
+            x => spaces()
+                .bind(() => char('%'))
+                .bind(spaces)
+                .bind(exprmd).map(
+                    y => new ModExprMD(x, y) ) ) )
+        .rollback()
         .or(() => term().map( t => new TermExprMD(t) ))
 }
 
@@ -299,7 +411,7 @@ export function exprpm(): CharParser<ExprPM> {
         .or(() => exprmd().map( t => new MDExprPM(t) ) ) 
 }
 
-export function defun(): CharParser<Def> {
+export function def(): CharParser<Def> {
     return varname().flatMap(
         vn => char('(')
             .bind(spaces)
@@ -322,4 +434,12 @@ export function defun(): CharParser<Def> {
                 .bind(spaces)
                 .bind(exprpm)
                 .map(e => new Defvar(vn, e)) ) )
+}
+
+export function stmt(): CharParser<Statement> {
+    return def().rollback().or(exprpm)
+}
+
+export function parse( s: string ): Result<Char, Statement> {
+    return stmt().parse(new CharStream(s))
 }

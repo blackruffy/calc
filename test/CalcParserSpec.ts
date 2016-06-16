@@ -5,6 +5,26 @@ import * as Parser from "../src/ParserCombinator"
 import { CharStream } from "../src/ParserStream"
 import { Result, Failure } from "../src/ParserResult"
 import * as Calc from "../src/CalcParser"
+import { toPM,
+         plus,
+         minus,
+         toMD,
+         mult,
+         div,
+         mod,
+         toTerm,
+         pow,
+         ffun,
+         fvar,
+         fnum,
+         fexpr,
+         fneg,
+         mknum,
+         mkvar,
+         mkfun,
+         defvar,
+         defun
+       } from "../src/CalcParser"
 import { Either, Right, Left } from "../src/Either"
 
 type Char = string
@@ -234,8 +254,15 @@ describe('exprpm', function () {
         assert.deepEqual(
             runParser(Calc.exprpm(), '123 + 456'),
             right(new Calc.PlusExprPM(
-                new Calc.TermExprMD(new Calc.FactTerm(new Calc.NumFact(new Calc.Num('123')))),
-                new Calc.MDExprPM(new Calc.TermExprMD(new Calc.FactTerm(new Calc.NumFact(new Calc.Num('456')))))
+                new Calc.TermExprMD(
+                    new Calc.FactTerm(
+                        new Calc.NumFact(
+                            new Calc.Num('123')))),
+                new Calc.MDExprPM(
+                    new Calc.TermExprMD(
+                        new Calc.FactTerm(
+                            new Calc.NumFact(
+                                new Calc.Num('456')))))
             ))
         )
     })
@@ -243,12 +270,42 @@ describe('exprpm', function () {
         assert.deepEqual(
             runParser(Calc.exprpm(), '123 + 456 / 3'),
             right(new Calc.PlusExprPM(
-                new Calc.TermExprMD(new Calc.FactTerm(new Calc.NumFact(new Calc.Num('123')))),
-                new Calc.MDExprPM(new Calc.DivExprMD(
-                    new Calc.FactTerm(new Calc.NumFact(new Calc.Num('456'))),
-                    new Calc.TermExprMD(new Calc.FactTerm(new Calc.NumFact(new Calc.Num('3'))))
+                new Calc.TermExprMD(
+                    new Calc.FactTerm(
+                        new Calc.NumFact(
+                            new Calc.Num('123')))),
+                new Calc.MDExprPM(
+                    new Calc.DivExprMD(
+                        new Calc.FactTerm(
+                            new Calc.NumFact(
+                                new Calc.Num('456'))),
+                        new Calc.TermExprMD(
+                            new Calc.FactTerm(
+                                new Calc.NumFact(
+                                    new Calc.Num('3'))))
                 ))
             ))
+        )
+    })
+    it('could be exprpm 3', function () {
+        assert.deepEqual(
+            runParser(Calc.exprpm(), 'a * (123 + 456) / ( (b + c)*f(x, y, z) )'),
+            right(toPM(mult(
+                toTerm(fvar(mkvar('a'))),
+                div(
+                    toTerm(fexpr(plus(
+                        toMD(toTerm(fnum(mknum('123')))),
+                        toPM(toMD(toTerm(fnum(mknum('456')))))
+                    ))),
+                    toMD(toTerm(fexpr(toPM(mult(
+                        toTerm(fexpr(plus(
+                            toMD(toTerm(fvar(mkvar('b')))),
+                            toPM(toMD(toTerm(fvar(mkvar('c')))))))),
+                        toMD(toTerm(ffun(mkfun(
+                            mkvar('f'),
+                            [ toPM(toMD(toTerm(fvar(mkvar('x'))))),
+                              toPM(toMD(toTerm(fvar(mkvar('y'))))),
+                              toPM(toMD(toTerm(fvar(mkvar('z'))))) ])))))))))))))
         )
     })
 })
@@ -256,7 +313,7 @@ describe('exprpm', function () {
 describe('defun', function () {
     it('could be defun 1', function () {
         assert.deepEqual(
-            runParser(Calc.defun(), 'hoge(x, y, z) = x + y + z'),
+            runParser(Calc.def(), 'hoge(x, y, z) = x + y + z'),
             right(new Calc.Defun(
                 new Calc.Var('hoge'),
                 [
@@ -265,10 +322,45 @@ describe('defun', function () {
                     new Calc.Var('z')
                 ],
                 new Calc.PlusExprPM(
-                    new Calc.TermExprMD(new Calc.FactTerm(new Calc.VarFact(new Calc.Var('x')))),
+                    new Calc.TermExprMD(
+                        new Calc.FactTerm(
+                            new Calc.VarFact(
+                                new Calc.Var('x')))),
                     new Calc.PlusExprPM(
-                        new Calc.TermExprMD(new Calc.FactTerm(new Calc.VarFact(new Calc.Var('y')))),
-                        new Calc.MDExprPM(new Calc.TermExprMD(new Calc.FactTerm(new Calc.VarFact(new Calc.Var('z')))))
+                        new Calc.TermExprMD(
+                            new Calc.FactTerm(
+                                new Calc.VarFact(
+                                    new Calc.Var('y')))),
+                        new Calc.MDExprPM(
+                            new Calc.TermExprMD(
+                                new Calc.FactTerm(
+                                    new Calc.VarFact(
+                                        new Calc.Var('z')))))
+                    )
+                )
+            ))
+        )
+    })
+    it('could be defvar 1', function () {
+        assert.deepEqual(
+            runParser(Calc.def(), 'hoge = 1 + 2 + 3'),
+            right(new Calc.Defvar(
+                new Calc.Var('hoge'),
+                new Calc.PlusExprPM(
+                    new Calc.TermExprMD(
+                        new Calc.FactTerm(
+                            new Calc.NumFact(
+                                new Calc.Num('1')))),
+                    new Calc.PlusExprPM(
+                        new Calc.TermExprMD(
+                            new Calc.FactTerm(
+                                new Calc.NumFact(
+                                    new Calc.Num('2')))),
+                        new Calc.MDExprPM(
+                            new Calc.TermExprMD(
+                                new Calc.FactTerm(
+                                    new Calc.NumFact(
+                                        new Calc.Num('3')))))
                     )
                 )
             ))
