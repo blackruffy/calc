@@ -1,3 +1,6 @@
+/**
+ * 構文を処理するモジュール
+ */
 
 import { Maybe, Just, Nothing } from "./Maybe"
 import { Either, Left, Right } from "./Either"
@@ -27,8 +30,14 @@ import { ExprPM,
          PowTerm
        } from "./CalcParser"
 
+/**
+ * 式を評価した結果を表現する。
+ */
 type Result = Either<string, number>
 
+/**
+ * ネイティブな関数を表現する。
+ */
 class NativeFunc {
     private func: (args: Array<number>) => number
     constructor( func: (args: Array<number>) => number ) {
@@ -40,6 +49,9 @@ class NativeFunc {
     }
 }
 
+/**
+ * 変数や関数を保持するスタック。
+ */
 const stack: Array<Object> = [
     {
         PI: new Number(Math.PI),
@@ -52,6 +64,9 @@ const stack: Array<Object> = [
     }
 ]
 
+/**
+ * 変数や関数をスタックから探す。
+ */
 export function findVar( name: string ): Maybe<any> {
     for( let i in stack ) {
         const v = (<any>stack[i])[name]
@@ -60,10 +75,16 @@ export function findVar( name: string ): Maybe<any> {
     return new Nothing<any>()
 }
 
+/**
+ * エラーを生成する。
+ */
 export function error( msg: string ): Result {
     return new Left<string, number>(msg)
 }
 
+/**
+ * ExprPMを評価する。
+ */
 export function evalExprPM( expr: ExprPM ): Result {
     if( expr instanceof MDExprPM ) {
         return evalExprMD( (<MDExprPM>expr).expr )
@@ -83,6 +104,9 @@ export function evalExprPM( expr: ExprPM ): Result {
     else return error('unkown type')
 }
 
+/**
+ * ExprMDを評価する。
+ */
 export function evalExprMD( expr: ExprMD ): Result {
     if( expr instanceof TermExprMD ) {
         return evalTerm( (<TermExprMD>expr).term )
@@ -103,6 +127,9 @@ export function evalExprMD( expr: ExprMD ): Result {
     else return error('unkown type')
 }
 
+/**
+ * Termを評価する。
+ */
 export function evalTerm( term: Term ): Result {
     if( term instanceof FactTerm ) {
         return evalFact( (<FactTerm>term).fact )
@@ -116,6 +143,9 @@ export function evalTerm( term: Term ): Result {
     else return error('unkown type')
 }
 
+/**
+ * Factを評価する。
+ */
 export function evalFact( fact: Fact ): Result {
     if( fact instanceof FuncFact ) {
         return evalFunCall( (<FuncFact>fact).funcall )
@@ -135,6 +165,9 @@ export function evalFact( fact: Fact ): Result {
     else return error('unkown type')
 }
 
+/**
+ * FunCallを評価する。
+ */
 export function evalFunCall( funcall: FunCall ): Result {
     const n = funcall.name.getData()
     return findVar( n ).map( f => {
@@ -178,6 +211,9 @@ export function evalFunCall( funcall: FunCall ): Result {
     }).getOrElse(() => error(n + ' is not defined'))
 }
 
+/**
+ * Varを評価する。
+ */
 export function evalVar( name: Var ): Result {
     const n = name.getData()
     return findVar( n ).map( r => {
@@ -191,6 +227,9 @@ export function evalVar( name: Var ): Result {
     }).getOrElse( () => error(n + ' is not defined') )
 }
 
+/**
+ * Numを評価する。
+ */
 export function evalNum( num: Num ): Result {
     return new Right<string, number>(parseFloat(num.getData()))
 }

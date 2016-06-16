@@ -23,18 +23,30 @@ export abstract class Identifier {
     }
 }
 
+/**
+ * 数値を表現するクラス。
+ */
 export class Num extends Identifier {
     private __num__: Num
 }
 
+/**
+ * 変数を表現するクラス。
+ */
 export class Var extends Identifier {
     private __var__: Var
 }
 
+/**
+ * 定義を表現する基底クラス。
+ */
 export abstract class Def {
     private __def__: Def;
 }
 
+/**
+ * 変数定義を表現するクラス。
+ */
 export class Defvar extends Def {
     name: Var;
     expr: ExprPM;
@@ -46,6 +58,9 @@ export class Defvar extends Def {
     }
 }
 
+/**
+ * 関数定義を表現するクラス。
+ */
 export class Defun extends Def {
     name: Var;
     args: Array<Var>;
@@ -59,6 +74,9 @@ export class Defun extends Def {
     }
 }
 
+/**
+ * 関数呼び出しを表現するクラス。
+ */
 export class FunCall {
     name: Var;
     args: Array<ExprPM>;
@@ -68,6 +86,9 @@ export class FunCall {
     }
 }
 
+/**
+ * 関数呼び出し、変数、数値、式などを表現する基底クラス。
+ */
 export abstract class Fact {
     private __fact__: Fact;
 }
@@ -112,6 +133,9 @@ export class NegFact extends Fact {
     }
 }
 
+/**
+ * 累乗を表現するクラス。
+ */
 export abstract class Term {
     private __term__: Term
 }
@@ -134,6 +158,9 @@ export class PowTerm extends Term {
     }
 }
 
+/**
+ * 乗算、割算、剰余を表現するクラス。
+ */
 export abstract class ExprMD {
     private __exprmd__: ExprMD;
 }
@@ -178,6 +205,9 @@ export class ModExprMD extends ExprMD {
     }
 }
 
+/**
+ * 加算、減算を表現するクラス。
+ */
 export abstract class ExprPM {
     private __exprpm__: ExprPM
 }
