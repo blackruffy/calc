@@ -1,4 +1,7 @@
 
+/**
+ * Maybeモナド。
+ */
 export interface Maybe<A> {
     flatMap<B>( func: (a: A) => Maybe<B> ): Maybe<B>;
     map<B>( func: (a: A) => B ): Maybe<B>;

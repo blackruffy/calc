@@ -1,4 +1,7 @@
 
+/**
+ * Eitherモナド。
+ */
 export interface Either<A, B> {
 
     flatMap<C>( func: (b: B) => Either<A, C> ): Either<A, C>;

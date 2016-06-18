@@ -5,13 +5,18 @@ import { CharParser,
          success,
          alphabet,
          oneOf,
-         spaces
+         spaces,
+         fails
        } from "./ParserCombinator"
 
 import { Result } from "./ParserResult"
 import { CharStream } from "./ParserStream"
 
 type Char = string
+
+export interface CalcError {
+    getMessage(): string
+}
 
 export abstract class Identifier {
     private data: string;
@@ -243,7 +248,27 @@ export class MinusExprPM extends ExprPM {
     }
 }
 
+export class InvalidExprPM extends ExprPM implements CalcError {
+    private __invalidexprpm__: InvalidExprPM
+    msg: string
+    constructor( msg: string ) {
+        super()
+        this.msg = msg
+    }
+
+    getMessage(): string {
+        return this.msg
+    }
+}
+
+/**
+ * 式または定義を表現する型
+ */
 type Statement = ExprPM | Def
+
+/**
+ * 上記のクラスのインスタンスを生成するヘルパー関数群。
+ */
 
 export function isDef( s: Statement ) {
     return s instanceof Def
@@ -329,10 +354,16 @@ export function defun( name: Var, args: Array<Var>, expr: ExprPM ): Def {
     return new Defun( name, args, expr )
 }
 
+/**
+ * 整数のパーサを生成する。
+ */
 export function integer(): CharParser<Num> {
     return digit().manyStr1().map( s => new Num(s) )
 }
 
+/**
+ * 数値のパーサを生成する。
+ */
 export function num(): CharParser<Num> {
     return integer().flatMap(
         x => char('.').bind(integer).map(
@@ -341,6 +372,9 @@ export function num(): CharParser<Num> {
             .or( () => success<string, Num>( () => x ) ) )
 }
 
+/**
+ * 変数のパーサを生成する。
+ */
 export function varname(): CharParser<Var> {
     return alphabet()
         .rollback()
@@ -353,6 +387,9 @@ export function varname(): CharParser<Var> {
                     as => new Var(a + as) ) )
 }
 
+/**
+ * 関数呼び出しのパーサを生成する。
+ */
 export function funcall(): CharParser<FunCall> {
     return varname().flatMap(
         vn => char('(')
@@ -366,6 +403,9 @@ export function funcall(): CharParser<FunCall> {
                           _ => new FunCall(vn, es) ) ) ) )
 }
 
+/**
+ * 関数呼び出し、変数、数値、式、マイナスの前置演算子のパーサを生成する。
+ */
 export function fact(): CharParser<Fact> {
     return funcall().map( fc => new FuncFact( fc ) )
         .rollback()
@@ -387,6 +427,9 @@ export function fact(): CharParser<Fact> {
              .map( f => new NegFact(f) ) )
 }
 
+/**
+ * 累乗のパーサを生成する。
+ */
 export function term(): CharParser<Term> {
     return fact().flatMap(
         t => spaces()
@@ -398,6 +441,9 @@ export function term(): CharParser<Term> {
         .or(() => fact().map( f => new FactTerm(f) ) )
 }
 
+/**
+ * 乗算、除算、剰余のパーサを生成する。
+ */
 export function exprmd(): CharParser<ExprMD> {
     return term().flatMap(
         x => spaces()
@@ -423,6 +469,9 @@ export function exprmd(): CharParser<ExprMD> {
         .or(() => term().map( t => new TermExprMD(t) ))
 }
 
+/**
+ * 加算、減算のパーサを生成する。
+ */
 export function exprpm(): CharParser<ExprPM> {
     return exprmd().flatMap(
             x => spaces()
@@ -438,9 +487,19 @@ export function exprpm(): CharParser<ExprPM> {
                 .bind(exprpm).map(
                     y => new MinusExprPM(x, y) ) ) )
         .rollback()
+        .or(() => exprmd().flatMap(
+            x => spaces()
+                .bind(() => oneOf("!#$&=~|?<>"))
+                .flatMap( o => spaces()
+                          .bind(exprpm).map(
+                              y => new InvalidExprPM(o + "は定義されてない演算子です。") ) ) ) )
+        .rollback()
         .or(() => exprmd().map( t => new MDExprPM(t) ) ) 
 }
 
+/**
+ * 変数定義、関数定義のパーサを生成する。
+ */
 export function def(): CharParser<Def> {
     return varname().flatMap(
         vn => char('(')
@@ -466,10 +525,16 @@ export function def(): CharParser<Def> {
                 .map(e => new Defvar(vn, e)) ) )
 }
 
+/**
+ * 定義、式のパーサを生成する。
+ */
 export function stmt(): CharParser<Statement> {
     return def().rollback().or(exprpm)
 }
 
+/**
+ * 入力文字列をパースして構文木を生成する。
+ */
 export function parse( s: string ): Result<Char, Statement> {
     return stmt().parse(new CharStream(s))
 }

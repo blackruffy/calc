@@ -1,4 +1,7 @@
 
+/**
+ * Streamの位置を表現するクラス。
+ */
 export class Position {
     private row: number
     private col: number

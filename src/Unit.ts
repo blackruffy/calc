@@ -1,4 +1,7 @@
 
+/**
+ * Unitクラス。
+ */
 export class Unit {
     constructor(){}
 }

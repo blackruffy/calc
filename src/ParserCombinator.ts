@@ -4,7 +4,9 @@ import { Result, Success, Failure } from "./ParserResult"
 import { Unit, unit } from "./Unit"
 
 /**
- * 基本的なパーサクラス
+ * 基本的なパーサクラス。
+ * A: Streamの型
+ * B: パース結果の型
  */
 export class Parser<A, B> {
     private _parse: (s: Stream<A>) => Result<A, B>;
@@ -21,7 +23,7 @@ export class Parser<A, B> {
     }
 
     /**
-     * パーサを合成する。
+     * パーサを合成してパーサを生成する。
      */
     flatMap<C>( func: (b: B) => Parser<A, C> ): Parser<A, C> {
         const self = this;
@@ -42,6 +44,9 @@ export class Parser<A, B> {
         })
     }
 
+    /**
+     * パーサを合成して新たなパーサを生成する。
+     */
     bind<C>( p: () => Parser<A, C> ): Parser<A, C> {
         const self = this;
         return self.flatMap( _ => p() )
@@ -72,7 +77,7 @@ export class Parser<A, B> {
     }
 
     /**
-     * 本パーサの０個以上の繰り返し。
+     * 本パーサを０個以上の繰り返すパーサを生成する。
      */    
     many(): Parser<A, Array<B>> {
         const self = this
@@ -81,6 +86,9 @@ export class Parser<A, B> {
                 (t, e) => new Success(s, []) ) )
     }
 
+    /**
+     * 本パーサを１個以上の繰り返すパーサを生成する。
+     */    
     many1(): Parser<A, Array<B>> {
         const self = this
         return new Parser<A, Array<B>>(
@@ -89,6 +97,9 @@ export class Parser<A, B> {
                     (u, ds) => new Success(u, [d].concat(ds)))))
     }
 
+    /**
+     * 本パーサを０個以上の繰り返し、文字列として結合するパーサを生成する。
+     */    
     manyStr(): Parser<A, string> {
         const self = this
         return new Parser<A, string>(
@@ -96,6 +107,9 @@ export class Parser<A, B> {
                 (t, e) => new Success(s, '') ) )
     }
 
+    /**
+     * 本パーサを１個以上の繰り返し、文字列として結合するパーサを生成する。
+     */    
     manyStr1(): Parser<A, string> {
         const self = this
         return new Parser<A, string>(
@@ -105,7 +119,7 @@ export class Parser<A, B> {
     }
 
     /**
-     * 失敗してもStreamを消費しない。
+     * 失敗してもStreamを消費しないパーサを生成する。
      */
     rollback(): Parser<A, B> {
         const self = this
@@ -114,11 +128,17 @@ export class Parser<A, B> {
                 (t, e) => new Failure<A, B>(s, e) ) )
     }
 
+    /**
+     * パーサpで区切られた本パーサの繰り返しのパーサを生成する。
+     */
     startBy<C>( p: () => Parser<A, C> ): Parser<A, Array<B>> {
         const self = this
         return p().flatMap( b => self ).many()
     }
     
+    /**
+     * パーサpで区切られた本パーサの繰り返しのパーサを生成する。
+     */
     sepBy1<C>( p: () => Parser<A, C> ): Parser<A, Array<B>> {
         const self = this
         return this.flatMap(
@@ -139,6 +159,9 @@ export class Parser<A, B> {
 
 type Char = string
 
+/**
+ * 文字のStreamを入力とするパーサ。
+ */
 export type CharParser<B> = Parser<Char, B>
 
 /**
@@ -161,7 +184,7 @@ export function fails<A, B>( msg: string ): Parser<A, B> {
 export function eof<A>(): Parser<A, Unit> {
     return new Parser<A, Unit>(
         s => s.head().map<Result<A, Unit>>(
-            _ => new Failure<A, Unit>(s, "not end of file" ) )
+            _ => new Failure<A, Unit>(s, "ストリームの最後に達しました。" ) )
             .getOrElse( () => new Success<A, Unit>(s, unit) ) )
 }
 
@@ -170,9 +193,9 @@ function char_( func: (c: Char) => boolean, msg: string ): CharParser<Char> {
         s => s.head().map(
             c => func(c) ?
                 new Success<Char, Char>( s.tail(), c ) :
-                new Failure<Char, Char>( s.tail(), `expected ${msg} but ${c} was found` ) )
+                new Failure<Char, Char>( s.tail(), `${c}ではなく${msg}ではありませんか？` ) )
             .getOrElse(
-                () => new Failure<Char, Char>( s, `end of stream: ${msg}`) ) )
+                () => new Failure<Char, Char>( s, `ストリームの最後に達しました: ${msg}`) ) )
 }
 
 /**
@@ -196,34 +219,58 @@ export function str( d: string ): CharParser<string> {
     return str_( d, 0 ).onFailure( e => d + ': ' + e)
 }
 
+/**
+ * 空白をパースする。
+ */
 export function space(): CharParser<Char> {
-    return char_( c => c == ' ' || c == '\t', 'space' )
+    return char_( c => c == ' ' || c == '\t', '空白' )
 }
 
+/**
+ * 空白の連続をパースする。
+ */
 export function spaces(): CharParser<string> {
     return space().manyStr()
 }
 
+/**
+ * どんな文字でも１つパースする。
+ */
 export function anyChar(): CharParser<Char> {
-    return char_( _ => true, "any char")
+    return char_( _ => true, "１つの文字")
 }
 
+/**
+ * 与えられた文字列の中の１つの文字にマッチする文字をパースする。
+ */
 export function oneOf( xs: string ): CharParser<Char> {
-    return char_( c => xs.indexOf(c) != -1, `one of ${xs}` )
+    return char_( c => xs.indexOf(c) != -1, `${xs}の中の１文字` )
 }
 
+/**
+ * 与えられた文字列の中のどの文字にもマッチしない文字をパースする。
+ */
 export function noneOf( xs: string ): CharParser<Char> {
-    return char_( c => xs.indexOf(c) == -1, `noen of ${xs}` )
+    return char_( c => xs.indexOf(c) == -1, `「${xs}」以外の文字` )
 }
 
+/**
+ * アルファベット(a-z, A-Z)を１文字パースする。
+ */
 export function alphabet(): CharParser<Char> {
-    return char_( c => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'), 'alphabet' )
+    return char_( c => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z'), 'アルファベット' )
 }
 
+/**
+ * 数字(0-9)を１文字パースする。
+ */
 export function digit(): CharParser<Char> {
-    return char_( c => c >= '0' && c <= '9', 'digit' )
+    return char_( c => c >= '0' && c <= '9', '数字' )
 }
 
+/**
+ * アルファベットと数値を１文字パースする。
+ */
 export function alphanum(): CharParser<Char> {
     return alphabet().or( digit )
 }

@@ -57,7 +57,7 @@ describe('integer', function () {
     it('integer 3', function () {
         assert.deepEqual(
             runParser(Calc.integer(), 'abc'),
-            left('expected digit but a was found')
+            left('aではなく数字ではありませんか？')
         )
     })
 })
@@ -306,6 +306,12 @@ describe('exprpm', function () {
                             [ toPM(toMD(toTerm(fvar(mkvar('x'))))),
                               toPM(toMD(toTerm(fvar(mkvar('y'))))),
                               toPM(toMD(toTerm(fvar(mkvar('z'))))) ])))))))))))))
+        )
+    })
+    it('could be exprpm 3', function () {
+        assert.deepEqual(
+            runParser(Calc.exprpm(), 'a & b'),
+            left('')
         )
     })
 })

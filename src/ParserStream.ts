@@ -4,12 +4,18 @@ import { Position } from "./Position"
 
 type Char = string
 
+/**
+ * パーサに入力するA型のストリーム。
+ */
 export interface Stream<A> {
     head(): Maybe<A>;
     tail(): Stream<A>;
     position(): Position
 }
 
+/**
+ * 文字のストリーム。
+ */
 export class CharStream implements Stream<Char> {
     private doc: string
     private index: number

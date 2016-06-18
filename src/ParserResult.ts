@@ -5,9 +5,13 @@
 import { Stream } from "./ParserStream"
 import { Either, Right, Left } from "./Either"
 
+/**
+ * パース結果を表現するクラス。
+ * A: Streamの型
+ * B: パース結果の型
+ */
 export interface Result<A, B> {
     flatMap<C>( func: (s: Stream<A>, b: B) => Result<A, C> ): Result<A, C>
-
     orElse( func: (s: Stream<A>, e: string) => Result<A, B> ): Result<A, B>;
     getDataOrElse( func: () => B ): B;
     getStream(): Stream<A>;

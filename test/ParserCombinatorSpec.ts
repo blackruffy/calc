@@ -31,7 +31,7 @@ describe('char parser', function () {
     it('parse a charactor 2', function () {
         assert.deepEqual(
             runParser(Parser.char('a'), 'b'),
-            left('expected a but b was found')
+            left('bではなくaではありませんか？')
         )
     })
     it('parse a charactor 3', function () {
@@ -51,7 +51,7 @@ describe('string parser', function () {
         const r = Parser.str('hoge').rollback().parse(new CharStream('hello world'))
         assert.equal(
             r.getData().getLeftOrElse(() => 'error'),
-            "hoge: expected o but e was found"
+            "hoge: eではなくoではありませんか？"
         )
         assert.equal(
             r.getStream().position().getCount(),
@@ -70,7 +70,7 @@ describe('parse one of charactors', function () {
     it('oneOf 2', function () {
         assert.deepEqual(
             runParser(Parser.oneOf('abcd'), 'f'),
-            left('expected one of abcd but f was found')
+            left('fではなくabcdの中の１文字ではありませんか？')
         )
     })
 })
@@ -79,7 +79,7 @@ describe('parse none of charactors', function () {
     it('noneOf 1', function () {
         assert.deepEqual(
             runParser(Parser.noneOf('abcd'), 'a'),
-            left('expected noen of abcd but a was found')
+            left('aではなく「abcd」以外の文字ではありませんか？')
         )
     })
     it('noneOf 2', function () {
@@ -100,7 +100,7 @@ describe('parse alphabet and digits', function () {
     it('alphabet 2', function () {
         assert.deepEqual(
             runParser(Parser.alphabet(), '1'),
-            left('expected alphabet but 1 was found')
+            left('1ではなくアルファベットではありませんか？')
         )
     })
     it('digit 1', function () {
@@ -112,7 +112,7 @@ describe('parse alphabet and digits', function () {
     it('digit 2', function () {
         assert.deepEqual(
             runParser(Parser.digit(), '-'),
-            left('expected digit but - was found')
+            left('-ではなく数字ではありませんか？')
         )
     })
 })
@@ -134,7 +134,7 @@ describe('parse many', function () {
     it('many 3', function () {
         assert.deepEqual(
             runParser(Parser.digit().many1(), 'abc'),
-            left('expected digit but a was found')
+            left('aではなく数字ではありませんか？')
         )
     })
     it('many 4', function () {
@@ -186,7 +186,7 @@ describe('parse many', function () {
     it('many 11', function () {
         assert.deepEqual(
             runParser(Parser.digit().manyStr1(), 'abc'),
-            left('expected digit but a was found')
+            left('aではなく数字ではありませんか？')
         )
     })
 })
@@ -222,7 +222,7 @@ describe('or parser', function () {
     it('or 2', function () {
         assert.deepEqual(
             runParser(Parser.str('abc').or(() => Parser.str('xyz')), 'xyz'),
-            left('xyz: expected x but y was found')
+            left('xyz: yではなくxではありませんか？')
         )
     })
     it('or 3', function () {
@@ -243,7 +243,7 @@ describe('eof parser', function () {
     it('eof 2', function () {
         assert.deepEqual(
             runParser(Parser.eof<Char>(), 'abc'),
-            left('not end of file')
+            left('ストリームの最後に達しました。')
         )
     })
 })
