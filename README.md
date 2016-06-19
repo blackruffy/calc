@@ -13,7 +13,75 @@
 - 単体テスト: mocha
 - ブラウザ化ツール: browserify
 
-# ビルド
+※上記以外の外部ライブラリは使用していません。
 
-ビルドするにはnpmが必要です。
+## ディレクトリ構成
 
+```
++-+- src: ソースコード
+  |
+  +- test: 単体テストのソースコード
+  |
+  +- webapp: index.htmlを置く場所
+  
+```
+
+## ビルド
+
+※ビルドするにはnodejs, npmが必要です。
+
+コマンドラインで以下のコマンドを実行します。
+
+### 依存パッケージのインストール
+
+- typescript: TypeScriptのコンパイラです。
+- browserify: CommonJSスタイルのコードをブラウザ化します。
+- gulp: タスクランナーです。
+- mocha: 単体テストです。
+- gulp-mocha: mochaをgulpで使用できるようにします。
+- typings: TypeScriptの型定義管理ツールです。
+- vinyl-source-stream: browserifyをgulpで使用するために必要です。
+    
+```
+npm install
+```
+
+### 型定義ファイルのインストール
+
+以下の型定義ファイルをインストールします。
+
+- mocha
+- node
+
+```
+`npm bin`/typings install
+```
+
+### コンパイル
+
+TypeScriptで記述されたソースコードをJavaScriptに変換します。
+
+```
+npm run tsc
+```
+
+### 単体テスト
+
+```
+npm run test
+```
+
+### ブラウザ化
+
+srcディレクトリ内のソースコードをまとめて、webapp/js/main.jsに出力します。
+
+```
+npm run browserify
+```
+
+## モジュール構成
+
+- main.ts: エントリーポイント。index.htmlから呼ばれます。
+- ParserCombinator.ts: パーサコンビネータの実装。
+- CalcParser.ts: 計算式をパースする。
+- CalcProcessor.ts: 構文木を評価する。
