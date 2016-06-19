@@ -27,9 +27,8 @@ import { ExprPM,
          NegFact,
          Term,
          FactTerm,
-         PowTerm,
-         parse
-       } from "./CalcParser"
+         PowTerm } from "./CalcStructure"
+import { parse } from "./CalcParser"
 import { Stack, stack, cons, nil } from "./Stack"
 import { CalcFrame, emptyFrame } from "./CalcFrame"
 import { SMap, emptySMap } from "./SMap"

@@ -64,17 +64,21 @@ function mkSection( idx: number ): void {
         </div>
       </div>
       
+      <div id="progress-line${idx}" class="progress-line">
+        <span>計算中・・・<span>
+      </div>
+
       <div id="output-line${idx}" class="output-line">
         <div class="output-head">出力${idx}</div>
         <div class="output-body">
-          <input type="text" id="output-text${idx}" class="output-text" readonly="true"></input>
+          <input type="text" id="output-text${idx}" class="output-text" disabled="true"></input>
         </div>
       </div>
 
       <div id="error-line${idx}" class="error-line">
         <div class="error-head">エラー${idx}</div>
         <div class="error-body">
-          <input type="text" id="error-text${idx}" class="error-text"  readonly="true"></input>
+          <input type="text" id="error-text${idx}" class="error-text"  disabled="true"></input>
         </div>
       </div>
       
@@ -84,27 +88,70 @@ function mkSection( idx: number ): void {
     resize()
     const input = <HTMLInputElement>document.getElementById(`input-text${idx}`)
     input.focus()
+        
     input.addEventListener("keypress", ev => {
         if( ev.which == 13 ) {
-            const r = evaluate(input.value.trim())
-            if( r.isRight() ) {
-                input.setAttribute("readonly", "true");
-                (<HTMLElement>document.getElementById(`output-line${idx}`)).style.display = "block";
-                (<HTMLElement>document.getElementById(`error-line${idx}`)).style.display = "none";
-                const output = <HTMLInputElement>document.getElementById(`output-text${idx}`)
-                const o = r.getRightOrElse(() => null)
-                output.value = o.toString()
-                mkSection(idx + 1)
+            const src = input.value.trim()
+            const outputLine = (<HTMLElement>document.getElementById(`output-line${idx}`))
+            const errorLine = (<HTMLElement>document.getElementById(`error-line${idx}`))
+            const progLine = (<HTMLElement>document.getElementById(`progress-line${idx}`))
+
+            if( src == "" ) {
+                outputLine.style.display = "none";
+                errorLine.style.display = "block";
+                const output = <HTMLInputElement>document.getElementById(`error-text${idx}`)
+                output.value = "式が入力されていません。"
+                main.scrollTop = main.scrollHeight
+                resize()
+            }
+            else if( hasMultiBytes( src ) ) {
+                outputLine.style.display = "none";
+                errorLine.style.display = "block";
+                const output = <HTMLInputElement>document.getElementById(`error-text${idx}`)
+                output.value = "全角文字は使用できません。"
+                main.scrollTop = main.scrollHeight
+                resize()
             }
             else {
-                (<HTMLElement>document.getElementById(`output-line${idx}`)).style.display = "none";
-                (<HTMLElement>document.getElementById(`error-line${idx}`)).style.display = "block";
-                const output = <HTMLInputElement>document.getElementById(`error-text${idx}`)
-                const o = r.getLeftOrElse(() => null)
-                output.value = o
+                progLine.style.display = "block";
+                outputLine.style.display = "none";
+                errorLine.style.display = "none";
+
+                setTimeout(() => {
+                    const r = evaluate(src);
+                    
+                    progLine.style.display = "none";
+                    
+                    if( r.isRight() ) {
+                        input.setAttribute("disabled", "true");
+                        outputLine.style.display = "block";
+                        errorLine.style.display = "none";
+                        const output = <HTMLInputElement>document.getElementById(`output-text${idx}`)
+                        const o = r.getRightOrElse(() => null)
+                        output.value = o.toString()
+                        mkSection(idx + 1)
+                    }
+                    else {
+                        outputLine.style.display = "none";
+                        errorLine.style.display = "block";
+                        const output = <HTMLInputElement>document.getElementById(`error-text${idx}`)
+                        const o = r.getLeftOrElse(() => null)
+                        output.value = o
+                    }
+                    main.scrollTop = main.scrollHeight
+                    resize()
+                }, 0)
             }
-            main.scrollTop = main.scrollHeight
-            resize()
         }
     })
+}
+
+function hasMultiBytes( src: string ): boolean {
+    for( let i=0; i<src.length; i++ ) {
+        const c = src.charCodeAt(i)
+        if( !((c >= 0x0 && c < 0x81) || (c == 0xf8f0) || (c >= 0xff61 && c < 0xffa0) || (c >= 0xf8f1 && c < 0xf8f4)) ) {
+            return true
+        }
+    }
+    return false
 }

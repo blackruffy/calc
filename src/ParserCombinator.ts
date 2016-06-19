@@ -150,7 +150,7 @@ export class Parser<A, B> {
      * ０個以上のパーサpで区切られたパーサを生成する。
      */
     sepBy<C>( p: () => Parser<A, C> ): Parser<A, Array<B>> {
-        return this.sepBy1( p ).or(
+        return this.sepBy1( p ).rollback().or(
             () => new Parser<A, Array<B>>(
                 s => new Success<A, Array<B>>(s, []) ) )
     }
@@ -191,9 +191,10 @@ export function eof<A>(): Parser<A, Unit> {
 function char_( func: (c: Char) => boolean, msg: string ): CharParser<Char> {
     return new Parser<Char, Char>(
         s => s.head().map(
-            c => func(c) ?
-                new Success<Char, Char>( s.tail(), c ) :
-                new Failure<Char, Char>( s.tail(), `${c}ではなく${msg}ではありませんか？` ) )
+            c => {
+                if( func(c) ) return new Success<Char, Char>( s.tail(), c )
+                else return new Failure<Char, Char>( s.tail(), `${c}ではなく${msg}ではありませんか？` )
+            })
             .getOrElse(
                 () => new Failure<Char, Char>( s, `ストリームの最後に達しました: ${msg}`) ) )
 }

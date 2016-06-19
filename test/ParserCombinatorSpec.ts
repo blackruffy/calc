@@ -210,6 +210,12 @@ describe('parse separate by', function () {
             right([])
         )
     })
+    it('sepBy 4', function () {
+        assert.deepEqual(
+            runParser(Parser.digit().sepBy(() => Parser.char(',')).bind(() => Parser.char('a')), 'abc'),
+            right('a')
+        )
+    })
 })
 
 describe('or parser', function () {

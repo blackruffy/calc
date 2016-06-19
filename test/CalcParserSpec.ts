@@ -5,7 +5,31 @@ import * as Parser from "../src/ParserCombinator"
 import { CharStream } from "../src/ParserStream"
 import { Result, Failure } from "../src/ParserResult"
 import * as Calc from "../src/CalcParser"
-import { toPM,
+import { ExprPM,
+         MDExprPM,
+         PlusExprPM,
+         MinusExprPM,
+         ExprMD,
+         TermExprMD,
+         MultExprMD,
+         DivExprMD,
+         ModExprMD,
+         Num,
+         Var,
+         Def,
+         Defvar,
+         Defun,
+         FunCall,
+         Fact,
+         FuncFact,
+         VarFact,
+         NumFact,
+         ExprFact,
+         NegFact,
+         Term,
+         FactTerm,
+         PowTerm,
+         toPM,
          plus,
          minus,
          toMD,
@@ -24,7 +48,7 @@ import { toPM,
          mkfun,
          defvar,
          defun
-       } from "../src/CalcParser"
+       } from "../src/CalcStructure"
 import { Either, Right, Left } from "../src/Either"
 
 type Char = string
@@ -45,13 +69,13 @@ describe('integer', function () {
     it('integer 1', function () {
         assert.deepEqual(
             runParser(Calc.integer(), '1234'),
-            right(new Calc.Num('1234'))
+            right(new Num('1234'))
         )
     })
     it('integer 2', function () {
         assert.deepEqual(
             runParser(Calc.integer(), '1234.567'),
-            right(new Calc.Num('1234'))
+            right(new Num('1234'))
         )
     })
     it('integer 3', function () {
@@ -66,19 +90,19 @@ describe('number', function () {
     it('num 1', function () {
         assert.deepEqual(
             runParser(Calc.num(), '1234'),
-            right(new Calc.Num('1234'))
+            right(new Num('1234'))
         )
     })
     it('num 2', function () {
         assert.deepEqual(
             runParser(Calc.num(), '1234.567'),
-            right(new Calc.Num('1234.567'))
+            right(new Num('1234.567'))
         )
     })
     it('num 3', function () {
         assert.deepEqual(
             runParser(Calc.num(), '1234.'),
-            right(new Calc.Num('1234'))
+            right(new Num('1234'))
         )
     })
 })
@@ -87,25 +111,31 @@ describe('varname', function () {
     it('could be hoge', function () {
         assert.deepEqual(
             runParser(Calc.varname(), 'hoge'),
-            right(new Calc.Var('hoge'))
+            right(new Var('hoge'))
         )
     })
     it('could be _hoge', function () {
         assert.deepEqual(
             runParser(Calc.varname(), '_hoge'),
-            right(new Calc.Var('_hoge'))
+            right(new Var('_hoge'))
         )
     })
     it('could be hoge_123', function () {
         assert.deepEqual(
             runParser(Calc.varname(), 'hoge_123'),
-            right(new Calc.Var('hoge_123'))
+            right(new Var('hoge_123'))
         )
     })
     it('could be hoge123', function () {
         assert.deepEqual(
             runParser(Calc.varname(), 'hoge123.456'),
-            right(new Calc.Var('hoge123'))
+            right(new Var('hoge123'))
+        )
+    })
+    it('should be fail', function () {
+        assert.deepEqual(
+            runParser(Calc.varname(), '1'),
+            left("1ではなく_の中の１文字ではありませんか？")
         )
     })
 })
@@ -114,32 +144,32 @@ describe('funcall', function () {
     it('could be funcall 1', function () {
         assert.deepEqual(
             runParser(Calc.funcall(), 'hoge(1, 2, 3)'),
-            right(new Calc.FunCall(
-                new Calc.Var('hoge'),
+            right(new FunCall(
+                new Var('hoge'),
                 [
-                    new Calc.MDExprPM(
-                        new Calc.TermExprMD(
-                            new Calc.FactTerm(
-                                new Calc.NumFact(
-                                    new Calc.Num('1')
+                    new MDExprPM(
+                        new TermExprMD(
+                            new FactTerm(
+                                new NumFact(
+                                    new Num('1')
                                 )
                             )
                         )
                     ),
-                    new Calc.MDExprPM(
-                        new Calc.TermExprMD(
-                            new Calc.FactTerm(
-                                new Calc.NumFact(
-                                    new Calc.Num('2')
+                    new MDExprPM(
+                        new TermExprMD(
+                            new FactTerm(
+                                new NumFact(
+                                    new Num('2')
                                 )
                             )
                         )
                     ),
-                    new Calc.MDExprPM(
-                        new Calc.TermExprMD(
-                            new Calc.FactTerm(
-                                new Calc.NumFact(
-                                    new Calc.Num('3')
+                    new MDExprPM(
+                        new TermExprMD(
+                            new FactTerm(
+                                new NumFact(
+                                    new Num('3')
                                 )
                             )
                         )
@@ -154,19 +184,19 @@ describe('fact', function () {
     it('could be var', function () {
         assert.deepEqual(
             runParser(Calc.fact(), 'hoge'),
-            right(new Calc.VarFact(new Calc.Var('hoge')))
+            right(new VarFact(new Var('hoge')))
         )
     })
     it('could be num', function () {
         assert.deepEqual(
             runParser(Calc.fact(), '123.456'),
-            right(new Calc.NumFact(new Calc.Num('123.456')))
+            right(new NumFact(new Num('123.456')))
         )
     })
     it('could be -num', function () {
         assert.deepEqual(
             runParser(Calc.fact(), '-123.456'),
-            right(new Calc.NegFact(new Calc.NumFact(new Calc.Num('123.456'))))
+            right(new NegFact(new NumFact(new Num('123.456'))))
         )
     })
 })
@@ -175,34 +205,34 @@ describe('term', function () {
     it('could be term 1', function () {
         assert.deepEqual(
             runParser(Calc.term(), '123^2'),
-            right(new Calc.PowTerm(
-                new Calc.NumFact(new Calc.Num('123')),
-                new Calc.FactTerm(new Calc.NumFact(new Calc.Num('2')))
+            right(new PowTerm(
+                new NumFact(new Num('123')),
+                new FactTerm(new NumFact(new Num('2')))
             ))
         )
     })
     it('could be term 2', function () {
         assert.deepEqual(
             runParser(Calc.term(), 'a^b'),
-            right(new Calc.PowTerm(
-                new Calc.VarFact(new Calc.Var('a')),
-                new Calc.FactTerm(new Calc.VarFact(new Calc.Var('b')))
+            right(new PowTerm(
+                new VarFact(new Var('a')),
+                new FactTerm(new VarFact(new Var('b')))
             ))
         )
     })
     it('could be term 3', function () {
         assert.deepEqual(
             runParser(Calc.term(), 'a ^  b'),
-            right(new Calc.PowTerm(
-                new Calc.VarFact(new Calc.Var('a')),
-                new Calc.FactTerm(new Calc.VarFact(new Calc.Var('b')))
+            right(new PowTerm(
+                new VarFact(new Var('a')),
+                new FactTerm(new VarFact(new Var('b')))
             ))
         )
     })
     it('could be term 4', function () {
         assert.deepEqual(
             runParser(Calc.term(), 'a'),
-            right(new Calc.FactTerm(new Calc.VarFact(new Calc.Var('a'))))
+            right(new FactTerm(new VarFact(new Var('a'))))
         )
     })
 })
@@ -211,38 +241,38 @@ describe('exprmd', function () {
     it('could be exprmd 1', function () {
         assert.deepEqual(
             runParser(Calc.exprmd(), '123 * 456'),
-            right(new Calc.MultExprMD(
-                new Calc.FactTerm(new Calc.NumFact(new Calc.Num('123'))),
-                new Calc.TermExprMD(new Calc.FactTerm(new Calc.NumFact(new Calc.Num('456'))))
+            right(new MultExprMD(
+                new FactTerm(new NumFact(new Num('123'))),
+                new TermExprMD(new FactTerm(new NumFact(new Num('456'))))
             ))
         )
     })
     it('could be exprmd 2', function () {
         assert.deepEqual(
             runParser(Calc.exprmd(), 'abc * 2'),
-            right(new Calc.MultExprMD(
-                new Calc.FactTerm(new Calc.VarFact(new Calc.Var('abc'))),
-                new Calc.TermExprMD(new Calc.FactTerm(new Calc.NumFact(new Calc.Num('2'))))
+            right(new MultExprMD(
+                new FactTerm(new VarFact(new Var('abc'))),
+                new TermExprMD(new FactTerm(new NumFact(new Num('2'))))
             ))
         )
     })
     it('could be exprmd 3', function () {
         assert.deepEqual(
             runParser(Calc.exprmd(), '123 / 456'),
-            right(new Calc.DivExprMD(
-                new Calc.FactTerm(new Calc.NumFact(new Calc.Num('123'))),
-                new Calc.TermExprMD(new Calc.FactTerm(new Calc.NumFact(new Calc.Num('456'))))
+            right(new DivExprMD(
+                new FactTerm(new NumFact(new Num('123'))),
+                new TermExprMD(new FactTerm(new NumFact(new Num('456'))))
             ))
         )
     })
     it('could be exprmd 4', function () {
         assert.deepEqual(
             runParser(Calc.exprmd(), '123 * 456 ^ abc'),
-            right(new Calc.MultExprMD(
-                new Calc.FactTerm(new Calc.NumFact(new Calc.Num('123'))),
-                new Calc.TermExprMD(new Calc.PowTerm(
-                    new Calc.NumFact(new Calc.Num('456')),
-                    new Calc.FactTerm(new Calc.VarFact(new Calc.Var('abc')))
+            right(new MultExprMD(
+                new FactTerm(new NumFact(new Num('123'))),
+                new TermExprMD(new PowTerm(
+                    new NumFact(new Num('456')),
+                    new FactTerm(new VarFact(new Var('abc')))
                 ))
             ))
         )
@@ -253,36 +283,36 @@ describe('exprpm', function () {
     it('could be exprpm 1', function () {
         assert.deepEqual(
             runParser(Calc.exprpm(), '123 + 456'),
-            right(new Calc.PlusExprPM(
-                new Calc.TermExprMD(
-                    new Calc.FactTerm(
-                        new Calc.NumFact(
-                            new Calc.Num('123')))),
-                new Calc.MDExprPM(
-                    new Calc.TermExprMD(
-                        new Calc.FactTerm(
-                            new Calc.NumFact(
-                                new Calc.Num('456')))))
+            right(new PlusExprPM(
+                new TermExprMD(
+                    new FactTerm(
+                        new NumFact(
+                            new Num('123')))),
+                new MDExprPM(
+                    new TermExprMD(
+                        new FactTerm(
+                            new NumFact(
+                                new Num('456')))))
             ))
         )
     })
     it('could be exprpm 2', function () {
         assert.deepEqual(
             runParser(Calc.exprpm(), '123 + 456 / 3'),
-            right(new Calc.PlusExprPM(
-                new Calc.TermExprMD(
-                    new Calc.FactTerm(
-                        new Calc.NumFact(
-                            new Calc.Num('123')))),
-                new Calc.MDExprPM(
-                    new Calc.DivExprMD(
-                        new Calc.FactTerm(
-                            new Calc.NumFact(
-                                new Calc.Num('456'))),
-                        new Calc.TermExprMD(
-                            new Calc.FactTerm(
-                                new Calc.NumFact(
-                                    new Calc.Num('3'))))
+            right(new PlusExprPM(
+                new TermExprMD(
+                    new FactTerm(
+                        new NumFact(
+                            new Num('123')))),
+                new MDExprPM(
+                    new DivExprMD(
+                        new FactTerm(
+                            new NumFact(
+                                new Num('456'))),
+                        new TermExprMD(
+                            new FactTerm(
+                                new NumFact(
+                                    new Num('3'))))
                 ))
             ))
         )
@@ -314,53 +344,62 @@ describe('defun', function () {
     it('could be defun 1', function () {
         assert.deepEqual(
             runParser(Calc.def(), 'hoge(x, y, z) = x + y + z'),
-            right(new Calc.Defun(
-                new Calc.Var('hoge'),
+            right(new Defun(
+                new Var('hoge'),
                 [
-                    new Calc.Var('x'),
-                    new Calc.Var('y'),
-                    new Calc.Var('z')
+                    new Var('x'),
+                    new Var('y'),
+                    new Var('z')
                 ],
-                new Calc.PlusExprPM(
-                    new Calc.TermExprMD(
-                        new Calc.FactTerm(
-                            new Calc.VarFact(
-                                new Calc.Var('x')))),
-                    new Calc.PlusExprPM(
-                        new Calc.TermExprMD(
-                            new Calc.FactTerm(
-                                new Calc.VarFact(
-                                    new Calc.Var('y')))),
-                        new Calc.MDExprPM(
-                            new Calc.TermExprMD(
-                                new Calc.FactTerm(
-                                    new Calc.VarFact(
-                                        new Calc.Var('z')))))
+                new PlusExprPM(
+                    new TermExprMD(
+                        new FactTerm(
+                            new VarFact(
+                                new Var('x')))),
+                    new PlusExprPM(
+                        new TermExprMD(
+                            new FactTerm(
+                                new VarFact(
+                                    new Var('y')))),
+                        new MDExprPM(
+                            new TermExprMD(
+                                new FactTerm(
+                                    new VarFact(
+                                        new Var('z')))))
                     )
                 )
             ))
         )
     })
+    
+    it('could be defun 2', function () {
+        
+        assert.deepEqual(
+            runParser(Calc.def(), 'hoge(1) = 1'),
+            right("(ではなく=ではありませんか？")
+        )
+    })
+    
     it('could be defvar 1', function () {
         assert.deepEqual(
             runParser(Calc.def(), 'hoge = 1 + 2 + 3'),
-            right(new Calc.Defvar(
-                new Calc.Var('hoge'),
-                new Calc.PlusExprPM(
-                    new Calc.TermExprMD(
-                        new Calc.FactTerm(
-                            new Calc.NumFact(
-                                new Calc.Num('1')))),
-                    new Calc.PlusExprPM(
-                        new Calc.TermExprMD(
-                            new Calc.FactTerm(
-                                new Calc.NumFact(
-                                    new Calc.Num('2')))),
-                        new Calc.MDExprPM(
-                            new Calc.TermExprMD(
-                                new Calc.FactTerm(
-                                    new Calc.NumFact(
-                                        new Calc.Num('3')))))
+            right(new Defvar(
+                new Var('hoge'),
+                new PlusExprPM(
+                    new TermExprMD(
+                        new FactTerm(
+                            new NumFact(
+                                new Num('1')))),
+                    new PlusExprPM(
+                        new TermExprMD(
+                            new FactTerm(
+                                new NumFact(
+                                    new Num('2')))),
+                        new MDExprPM(
+                            new TermExprMD(
+                                new FactTerm(
+                                    new NumFact(
+                                        new Num('3')))))
                     )
                 )
             ))
