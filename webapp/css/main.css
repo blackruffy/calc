@@ -142,6 +142,7 @@ input {
     font-size: large;
     font-weight: bold;
     ime-mode: disabled;
+    background-color: white;
 }
 
 .input-text {
