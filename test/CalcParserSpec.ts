@@ -308,12 +308,6 @@ describe('exprpm', function () {
                               toPM(toMD(toTerm(fvar(mkvar('z'))))) ])))))))))))))
         )
     })
-    it('could be exprpm 3', function () {
-        assert.deepEqual(
-            runParser(Calc.exprpm(), 'a & b'),
-            left('')
-        )
-    })
 })
 
 describe('defun', function () {

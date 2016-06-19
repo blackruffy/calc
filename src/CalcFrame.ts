@@ -1,4 +1,5 @@
-import {SMap} from "./SMap"
+import {SMap, emptySMap} from "./SMap"
+import {Maybe, Just, Nothing} from "./Maybe"
 
 /**
  * 変数や呼ばれた関数を保持するクラス。
@@ -6,17 +7,25 @@ import {SMap} from "./SMap"
  */
 export class CalcFrame<A> {
     private vars: SMap<A>;
-    private callees: SMap<string>;
-    constructor( vars: SMap<A>, callees: SMap<string> ) {
+    private callee: Maybe<string>;
+    constructor( vars: SMap<A>, callee: Maybe<string> ) {
         this.vars = vars
-        this.callees = callees
+        this.callee = callee
     }
 
     getVars(): SMap<A> {
         return this.vars;
     }
 
-    getCallees(): SMap<string> {
-        return this.callees;
+    getCallee(): Maybe<string> {
+        return this.callee;
     }
+
+    setCallee( name: string ): void {
+        this.callee = new Just(name)
+    }
+}
+
+export function emptyFrame<A>(): CalcFrame<A> {
+    return new CalcFrame<A>( emptySMap<A>(), new Nothing<string>() )
 }

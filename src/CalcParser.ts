@@ -6,17 +6,14 @@ import { CharParser,
          alphabet,
          oneOf,
          spaces,
-         fails
+         fails,
+         eof
        } from "./ParserCombinator"
 
 import { Result } from "./ParserResult"
 import { CharStream } from "./ParserStream"
 
 type Char = string
-
-export interface CalcError {
-    getMessage(): string
-}
 
 export abstract class Identifier {
     private data: string;
@@ -47,6 +44,7 @@ export class Var extends Identifier {
  */
 export abstract class Def {
     private __def__: Def;
+    constructor() {}
 }
 
 /**
@@ -245,19 +243,6 @@ export class MinusExprPM extends ExprPM {
         super()
         this.expr1 = expr1
         this.expr2 = expr2
-    }
-}
-
-export class InvalidExprPM extends ExprPM implements CalcError {
-    private __invalidexprpm__: InvalidExprPM
-    msg: string
-    constructor( msg: string ) {
-        super()
-        this.msg = msg
-    }
-
-    getMessage(): string {
-        return this.msg
     }
 }
 
@@ -487,13 +472,6 @@ export function exprpm(): CharParser<ExprPM> {
                 .bind(exprpm).map(
                     y => new MinusExprPM(x, y) ) ) )
         .rollback()
-        .or(() => exprmd().flatMap(
-            x => spaces()
-                .bind(() => oneOf("!#$&=~|?<>"))
-                .flatMap( o => spaces()
-                          .bind(exprpm).map(
-                              y => new InvalidExprPM(o + "は定義されてない演算子です。") ) ) ) )
-        .rollback()
         .or(() => exprmd().map( t => new MDExprPM(t) ) ) 
 }
 
@@ -529,7 +507,11 @@ export function def(): CharParser<Def> {
  * 定義、式のパーサを生成する。
  */
 export function stmt(): CharParser<Statement> {
-    return def().rollback().or(exprpm)
+    return def()
+        .rollback()
+        .or(exprpm)
+        .flatMap( s => eof<Char>().map( _ => s ) )
+        .onFailure( (s, e) => '\'' + s.toString() + '\'を認識できません。' )
 }
 
 /**

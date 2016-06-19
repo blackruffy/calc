@@ -1,1 +1,150 @@
 
+body {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+}
+
+#header {
+    margin: 0px;
+    padding: 0px;
+    border-width: 0px;
+}
+
+.header-label {
+    margin: 0px 10px 0px 10px;
+    padding: 5px;
+    border-radius: 0px 0px 10px 10px;
+    display: inline-block;
+    width: 100px;
+    text-align: center;
+    font-weight: bold;
+}
+
+#header-title {
+    border-left: 1px solid silver;
+    border-right: 1px solid silver;
+    border-bottom: 1px solid silver;
+    background-color: #DDDDDD;
+    color: #555555;
+}
+
+#clear-btn {
+    border-left: 1px solid #DD3311;
+    border-right: 1px solid #DD3311;
+    border-bottom: 1px solid #DD3311;
+    background-color: #FF5555;
+    cursor: pointer;
+    color: #FFFFFF;
+}
+
+#header-help {
+    border-left: 1px solid #3355DD;
+    border-right: 1px solid #3355DD;
+    border-bottom: 1px solid #3355DD;
+    background-color: #4169e1;
+    cursor: pointer;
+    color: #FFFFFF;
+}
+
+#main {
+    margin: 0px;
+    margin-top: 5px;
+    padding: 0px;
+    border-width: 0px;
+    overflow: auto;
+    /*border: 1px solid red;*/
+}
+
+.section {
+    margin: 0px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.input-line {
+    margin: 10px 0px 10px 0px;
+    border-bottom: 1px solid #00AA33;
+}
+
+.output-line {
+    margin: 10px 0px 10px 0px;
+    border-bottom: 1px solid #0077FF;
+    display: none;
+}
+
+.error-line {
+    margin: 10px 0px 10px 0px;
+    border-bottom: 1px solid #ff6347;
+    display: none;
+}
+
+.input-head {
+    display: inline-block;
+    margin: 0px;
+    padding: 5px;
+    background-color: #00AA33;
+    border-radius: 0px 20px 0px 0px;
+    color: white;
+    width: 80px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.output-head {
+    display: inline-block;
+    margin: 0px;
+    padding: 5px;
+    background-color: #0077FF;
+    border-radius: 0px 20px 0px 0px;
+    color: white;
+    width: 80px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.error-head {
+    display: inline-block;
+    margin: 0px;
+    padding: 5px;
+    background-color: #ff6347;
+    border-radius: 0px 20px 0px 0px;
+    color: white;
+    width: 80px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.input-body {
+    padding-left: 10px;
+    display: inline-block;
+}
+
+.output-body {
+    padding-left: 10px;
+    display: inline-block;
+}
+
+.error-body {
+    padding-left: 10px;
+    display: inline-block;
+}
+
+input {
+    outline: 0;
+    border-width: 0px;
+    font-size: large;
+    font-weight: bold;
+}
+
+.input-text {
+    color: #227744;
+}
+
+.output-text {
+    color: #2255FF;
+}
+
+.error-text {
+    color: crimson;
+}

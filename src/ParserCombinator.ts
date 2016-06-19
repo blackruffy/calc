@@ -55,11 +55,11 @@ export class Parser<A, B> {
     /**
      * パースが失敗した時のメッセージを変更する。
      */
-    onFailure( func: (e: string) => string ): Parser<A, B> {
+    onFailure( func: (s: Stream<A>, e: string) => string ): Parser<A, B> {
         const self = this;
         return new Parser<A, B>( s => {
             return self.parse( s ).orElse( (s, e) => {
-                return new Failure<A, B>(s, func(e))
+                return new Failure<A, B>(s, func(s, e))
             })
         })
     }
@@ -184,7 +184,7 @@ export function fails<A, B>( msg: string ): Parser<A, B> {
 export function eof<A>(): Parser<A, Unit> {
     return new Parser<A, Unit>(
         s => s.head().map<Result<A, Unit>>(
-            _ => new Failure<A, Unit>(s, "ストリームの最後に達しました。" ) )
+            _ => new Failure<A, Unit>(s, "ストリームの最後に達していません。" ) )
             .getOrElse( () => new Success<A, Unit>(s, unit) ) )
 }
 
@@ -216,7 +216,7 @@ function str_( d: string, i: number ): CharParser<string> {
  * 文字列をパースする。
  */
 export function str( d: string ): CharParser<string> {
-    return str_( d, 0 ).onFailure( e => d + ': ' + e)
+    return str_( d, 0 ).onFailure( (s, e) => d + ': ' + e)
 }
 
 /**

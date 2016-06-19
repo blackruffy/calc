@@ -8,7 +8,7 @@ export interface Either<A, B> {
     map<C>( func: (b: B) => C ): Either<A, C>;
     
     getLeftOrElse( func: () => A ): A;
-    getRightOrElese( func: () => B ): B;
+    getRightOrElse( func: () => B ): B;
 
     isLeft(): boolean;
     isRight(): boolean;
@@ -34,7 +34,7 @@ export class Left<A, B> implements Either<A, B> {
         return this.data;
     }
     
-    getRightOrElese( func: () => B ): B {
+    getRightOrElse( func: () => B ): B {
         return func()
     }
     
@@ -70,7 +70,7 @@ export class Right<A, B> implements Either<A, B> {
         return func();
     }
     
-    getRightOrElese( func: () => B ): B {
+    getRightOrElse( func: () => B ): B {
         return this.data
     }
     

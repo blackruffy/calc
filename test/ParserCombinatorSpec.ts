@@ -243,7 +243,7 @@ describe('eof parser', function () {
     it('eof 2', function () {
         assert.deepEqual(
             runParser(Parser.eof<Char>(), 'abc'),
-            left('ストリームの最後に達しました。')
+            left('ストリームの最後に達していません。')
         )
     })
 })

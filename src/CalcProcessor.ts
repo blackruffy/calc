@@ -27,8 +27,15 @@ import { ExprPM,
          NegFact,
          Term,
          FactTerm,
-         PowTerm
+         PowTerm,
+         parse
        } from "./CalcParser"
+import { Stack, stack, cons, nil } from "./Stack"
+import { CalcFrame, emptyFrame } from "./CalcFrame"
+import { SMap, emptySMap } from "./SMap"
+import { Unit, unit } from "./Unit"
+import { NativeFunc } from "./NativeFunc"
+import { CallStack, FrameType, StackType } from "./CallStack"
 
 /**
  * 式を評価した結果を表現する。
@@ -36,50 +43,27 @@ import { ExprPM,
 type Result = Either<string, number>
 
 /**
- * ネイティブな関数を表現する。
- */
-class NativeFunc {
-    private func: (args: Array<number>) => number
-    constructor( func: (args: Array<number>) => number ) {
-        this.func = func
-    }
-    
-    eval( args: Array<number> ): number {
-        return this.func( args )
-    }
-}
-
-/**
- * 変数や関数を保持するスタック。
- */
-const stack: Array<Object> = [
-    {
-        PI: new Number(Math.PI),
-        E: new Number(Math.E),
-        sin: new NativeFunc( args => Math.sin.apply(this, args) ),
-        cos: new NativeFunc( args => Math.cos.apply(this, args) ),
-        tan: new NativeFunc( args => Math.tan.apply(this, args) ),
-        log: new NativeFunc( args => Math.log.apply(this, args) ),
-        exp: new NativeFunc( args => Math.exp.apply(this, args) )
-    }
-]
-
-/**
- * 変数や関数をスタックから探す。
- */
-export function findVar( name: string ): Maybe<any> {
-    for( let i in stack ) {
-        const v = (<any>stack[i])[name]
-        if( v ) return new Just<any>(v)
-    }
-    return new Nothing<any>()
-}
-
-/**
  * エラーを生成する。
  */
 export function error( msg: string ): Result {
     return new Left<string, number>(msg)
+}
+
+export function evalDef( def: Def ): Either<string, string> {
+    if( def instanceof Defvar ) {
+        const p = <Defvar>def
+        return evalExprPM(p.expr).map( x => {
+            CallStack.getStack().head().getOrNull().getVars().set( p.name.getData(), x )
+            return `変数'${p.name.getData()}'を定義しました。`
+        })
+    }
+    else if( def instanceof Defun ) {
+        const p = <Defun>def
+        CallStack.getStack().head().getOrNull().getVars().set( p.name.getData(), p )
+        return new Right<string, string>(`関数'${p.name.getData()}'を定義しました。`)
+    }
+    else return new Left<string,
+    string>('unknown type')
 }
 
 /**
@@ -92,14 +76,24 @@ export function evalExprPM( expr: ExprPM ): Result {
     else if( expr instanceof PlusExprPM ) {
         const p = <PlusExprPM>expr
         return evalExprMD( p.expr1 ).flatMap(
-            x => evalExprPM( p.expr2 ).map(
-                y => x + y ))
+            x => evalExprPM( p.expr2 ).flatMap( y => {
+                try {
+                    return new Right<string, number>(x + y)
+                } catch( ex ) {
+                    return new Left<string, number>(ex)
+                }
+            }))
     }
     else if( expr instanceof MinusExprPM ) {
         const p = <MinusExprPM>expr
         return evalExprMD( p.expr1 ).flatMap(
-            x => evalExprPM( p.expr2 ).map(
-                y => x - y ))
+            x => evalExprPM( p.expr2 ).flatMap( y => {
+                try {
+                    return new Right<string, number>(x - y)
+                } catch( ex ) {
+                    return new Left<string, number>(ex)
+                }
+            }))
     }
     else return error('unkown type')
 }
@@ -114,15 +108,36 @@ export function evalExprMD( expr: ExprMD ): Result {
     else if( expr instanceof MultExprMD ) {
         const p = <MultExprMD>expr
         return evalTerm( p.term ).flatMap(
-            x => evalExprMD( p.expr ).map(
-                y => x * y ))
+            x => evalExprMD( p.expr ).flatMap( y => {
+                try {
+                    return new Right<string, number>(x * y)
+                } catch( ex ) {
+                    return new Left<string, number>(ex)
+                }
+            }))
     }
     else if( expr instanceof DivExprMD ) {
         const p = <DivExprMD>expr
         return evalTerm( p.term ).flatMap(
-            x => evalExprMD( p.expr ).map(
-                y => x / y ))
-    
+            x => evalExprMD( p.expr ).flatMap( y => {
+                try {
+                    return new Right<string, number>(x / y)
+                } catch( ex ) {
+                    return new Left<string, number>(ex)
+                }
+            }))
+    }
+    else if( expr instanceof ModExprMD ) {
+        const p = <ModExprMD>expr
+        return evalTerm( p.term ).flatMap(
+            x => evalExprMD( p.expr ).flatMap( y => {
+                try {
+                    return new Right<string, number>(x % y)
+                } catch( ex ) {
+                    return new Left<string, number>
+                        (ex)
+                }
+            }))
     }
     else return error('unkown type')
 }
@@ -170,45 +185,49 @@ export function evalFact( fact: Fact ): Result {
  */
 export function evalFunCall( funcall: FunCall ): Result {
     const n = funcall.name.getData()
-    return findVar( n ).map( f => {
-        if( f instanceof Defun ) {
-            const defun = <Defun>f
-            return funcall.args.reduce<Either<string, any>>( (r, a) => r.flatMap( o => {
+    if( CallStack.findCallee( n ).isNothing() ) {
+        return CallStack.findVar( n ).map( f => {
+            if( f instanceof Defun ) {
+                const defun = <Defun>f
+                return funcall.args.reduce<Either<string, any>>( (r, a) => r.flatMap( o => {
                     const k = defun.args[o.idx].getData()
                     o.idx++
-                    if( o.frame[k] ) {
-                        return error(k + ' is already defined')
+                    o.frame.setCallee( n )
+                    if( o.frame.getVars().get( k ).isNothing() ) {
+                        return evalExprPM(a).map( v => {
+                            o.frame.getVars().set( k, v )
+                            return o
+                        })
                     }
-                    else return evalExprPM(a).map( v => {
-                        o.frame[k] = v
-                        return o
-                    })
-            } ), new Right<string, any>(
-                { idx: 0, frame: {} }
-            ) ).flatMap( o => {
-                stack.unshift( o.frame )
-                const r = evalExprPM(defun.expr)
-                stack.shift()
-                return r
-            } )
-        }
-        else if( f instanceof NativeFunc ) {
-            return funcall
-                .args
-                .reduce<Either<string, Array<number>>>(
-                    (r, a) => r.flatMap(
-                        xs => evalExprPM(a).map(
-                            x => {
-                                xs.push(x)
-                                return xs
-                            }
-                        )
-                    ),
-                    new Right<string, Array<number>>([]))
-                .map( xs => (<NativeFunc>f).eval(xs) )
-        }
-        else return error(n + ' is not function')
-    }).getOrElse(() => error(n + ' is not defined'))
+                    else return error(k + ' は既に定義されています。')
+                } ), new Right<string, any>(
+                    { idx: 0, frame: emptyFrame<FrameType>() }
+                ) ).flatMap( o => {
+                    CallStack.push( o.frame )
+                    const r = evalExprPM(defun.expr)
+                    CallStack.pop()
+                    return r
+                } )
+            }
+            else if( f instanceof NativeFunc ) {
+                return funcall
+                    .args
+                    .reduce<Either<string, Array<number>>>(
+                        (r, a) => r.flatMap(
+                            xs => evalExprPM(a).map(
+                                x => {
+                                    xs.push(x)
+                                    return xs
+                                }
+                            )
+                        ),
+                        new Right<string, Array<number>>([]))
+                    .map( xs => (<NativeFunc>f).eval(xs) )
+            }
+            else return error(n + ' は関数ではありません。')
+        }).getOrElse(() => error(n + ' は定義されていません。'))
+    }
+    else return error("関数'" + n + "'は再帰的に呼び出すことはできません。")
 }
 
 /**
@@ -216,15 +235,18 @@ export function evalFunCall( funcall: FunCall ): Result {
  */
 export function evalVar( name: Var ): Result {
     const n = name.getData()
-    return findVar( n ).map( r => {
+    return CallStack.findVar( n ).map( r => {
         if( r instanceof Num ) {
             return new Right<string, number>(parseFloat(r.getData()))
         }
         else if( r instanceof Number ) {
-            return new Right<string, number>( r )
+            return new Right<string, number>( r.valueOf() )
         }
-        else return error(n + ' is not number')
-    }).getOrElse( () => error(n + ' is not defined') )
+        else if( (typeof r) == 'number' ) {
+            return new Right<string, number>( new Number(r).valueOf() )
+        }
+        else return error(n + ' は数値ではありません。')
+    }).getOrElse( () => error(n + ' は定義されていません。') )
 }
 
 /**
@@ -233,4 +255,21 @@ export function evalVar( name: Var ): Result {
 export function evalNum( num: Num ): Result {
     return new Right<string, number>(parseFloat(num.getData()))
 }
-    
+
+/**
+ * ソースをパースし評価する。
+ */
+export function evaluate( d: string ): Either<string, string | number> {
+    return parse(d).getData().flatMap( s => {
+        if( s instanceof Def ) return <Either<string, string|number>>evalDef(<Def>s)
+        else if( s instanceof ExprPM ) return <Either<string, string|number>>evalExprPM(<ExprPM>s)
+        else return <Either<string, string|number>>error('parsed result should be Def or ExprPM')
+    })
+}
+
+/**
+ * スタックをクリアする。
+ */
+export function clearStack(): void {
+    CallStack.clearStack()
+}

@@ -23,3 +23,7 @@ export class SMap<B> {
     }
     
 }
+
+export function emptySMap<A>(): SMap<A> {
+    return new SMap<A>({})
+}
