@@ -92,6 +92,9 @@ npm run browserify
 以下は主なモジュールです。
 
 - main.ts: エントリーポイントです。index.htmlから呼ばれます。
-- ParserCombinator.ts: パーサコンビネータの実装。
-- CalcParser.ts: 計算式のパーサの実装。
+- ParserCombinator.ts: パーサコンビネータの実装です。
+- ParserStream.ts: パーサへの入力データを表現する。
+- ParserResult.ts: パース結果を表現する。
+- CalcParser.ts: 計算式のパーサの実装です。
 - CalcProcessor.ts: 構文木を評価します。
+- CalcStructure.ts: 構文の構造を表現します。

@@ -340,6 +340,27 @@ describe('exprpm', function () {
     })
 })
 
+describe('paren', function () {
+    it('could be paren 1', function () {
+        assert.deepEqual(
+            runParser(Calc.paren(), '(1 + 2)'),
+            right(plus(
+                toMD(toTerm(fnum(mknum('1')))),
+                toPM(toMD(toTerm(fnum(mknum('2')))))
+            ))
+        )
+    })
+    it('could be paren 2', function () {
+        assert.deepEqual(
+            runParser(Calc.paren(), '(1 + 2) + 3'),
+            right(plus(
+                toMD(toTerm(fnum(mknum('1')))),
+                toPM(toMD(toTerm(fnum(mknum('2')))))
+            ))
+        )
+    })
+})
+
 describe('defun', function () {
     it('could be defun 1', function () {
         assert.deepEqual(

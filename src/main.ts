@@ -1,25 +1,36 @@
 
 import { evaluate, clearStack } from "./CalcProcessor"
 
+/** 計算式の履歴を保持する配列 */
+let hist: Array<string> = []
+
+/**
+ * エントリーポイント。
+ */
 window.onload = () => {
-    
+
+    // クリアボタン押下時の動作
     document.getElementById("clear-btn").addEventListener("click", ev => {
         clearStack()
+        hist = []
         document.getElementById("main").innerHTML = ""
         mkSection(1)
     })
 
-    
+    // ヘルプ押下時の動作
     document.getElementById("header-help").addEventListener("click", ev => {
         location.href = "https://github.com/blackruffy/calc/wiki/%E4%BD%BF%E3%81%84%E6%96%B9"
     })
-    
+
+    // ウインドウのサイズが変更された時の動作
     window.addEventListener("resize", ev => {
         resize();
     })
-    
+
+    // 入力フィールドを作成する。
     mkSection(1)
 
+    // 表示サイズ調整
     resize()
 }
 
@@ -88,40 +99,60 @@ function mkSection( idx: number ): void {
     resize()
     const input = <HTMLInputElement>document.getElementById(`input-text${idx}`)
     input.focus()
-        
+
+    let currIdx = idx
+    
+    input.addEventListener("keydown", ev => {
+        // 上ボタンで前の式を参照する
+        if( ev.which == 38 ) {
+            if( currIdx > 1 ) {
+                currIdx--
+                input.value = hist[currIdx]
+            }
+        }
+        // 下ボタンで次の式を参照する
+        else if( ev.which == 40 ) {
+            if( currIdx < idx - 1 ) {
+                currIdx++
+                input.value = hist[currIdx]
+            }
+        }
+    })
+    
     input.addEventListener("keypress", ev => {
+        // エンターキーが押された式を評価する。
         if( ev.which == 13 ) {
             const src = input.value.trim()
+            hist[idx] = src
             const outputLine = (<HTMLElement>document.getElementById(`output-line${idx}`))
             const errorLine = (<HTMLElement>document.getElementById(`error-line${idx}`))
             const progLine = (<HTMLElement>document.getElementById(`progress-line${idx}`))
-
-            if( src == "" ) {
+            
+            const error = (msg: string) => {
                 outputLine.style.display = "none";
                 errorLine.style.display = "block";
                 const output = <HTMLInputElement>document.getElementById(`error-text${idx}`)
-                output.value = "式が入力されていません。"
+                output.value = msg
                 main.scrollTop = main.scrollHeight
                 resize()
             }
-            else if( hasMultiBytes( src ) ) {
-                outputLine.style.display = "none";
-                errorLine.style.display = "block";
-                const output = <HTMLInputElement>document.getElementById(`error-text${idx}`)
-                output.value = "全角文字は使用できません。"
-                main.scrollTop = main.scrollHeight
-                resize()
-            }
+            
+            if( src == "" ) error("式が入力されていません。")
+            else if( hasMultiBytes( src ) ) error("全角文字は使用できません。")
             else {
+                // 「計算中」と表示する
                 progLine.style.display = "block";
                 outputLine.style.display = "none";
                 errorLine.style.display = "none";
+                main.scrollTop = main.scrollHeight
 
                 setTimeout(() => {
+                    // 計算式をパースして、評価する
                     const r = evaluate(src);
                     
                     progLine.style.display = "none";
-                    
+
+                    // 計算式の評価結果が正常な場合
                     if( r.isRight() ) {
                         input.setAttribute("disabled", "true");
                         outputLine.style.display = "block";
@@ -130,22 +161,21 @@ function mkSection( idx: number ): void {
                         const o = r.getRightOrElse(() => null)
                         output.value = o.toString()
                         mkSection(idx + 1)
+                        main.scrollTop = main.scrollHeight
+                        resize()
                     }
-                    else {
-                        outputLine.style.display = "none";
-                        errorLine.style.display = "block";
-                        const output = <HTMLInputElement>document.getElementById(`error-text${idx}`)
-                        const o = r.getLeftOrElse(() => null)
-                        output.value = o
-                    }
-                    main.scrollTop = main.scrollHeight
-                    resize()
-                }, 0)
+                    // エラーの場合
+                    else error(r.getLeftOrElse(() => null))
+                    
+                }, 10)
             }
         }
     })
 }
 
+/**
+ * マルチバイト文字が含まれているか判定する。
+ */
 function hasMultiBytes( src: string ): boolean {
     for( let i=0; i<src.length; i++ ) {
         const c = src.charCodeAt(i)

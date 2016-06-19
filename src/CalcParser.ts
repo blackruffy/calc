@@ -223,7 +223,7 @@ export function def(): CharParser<Def> {
 export function stmt(): CharParser<Statement> {
     return def()
         .rollback()
-        .or(paren)
+        .or(() => paren().flatMap(e => eof<Char>().map( _ => e)))
         .rollback()
         .or(exprpm)
         .flatMap( s => eof<Char>().map( _ => s ) )

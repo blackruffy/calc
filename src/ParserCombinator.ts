@@ -5,8 +5,8 @@ import { Unit, unit } from "./Unit"
 
 /**
  * 基本的なパーサクラス。
- * A: Streamの型
- * B: パース結果の型
+ * @param <A> Streamの型
+ * @param <B> パース結果の型
  */
 export class Parser<A, B> {
     private _parse: (s: Stream<A>) => Result<A, B>;
@@ -46,6 +46,7 @@ export class Parser<A, B> {
 
     /**
      * パーサを合成して新たなパーサを生成する。
+     * 本パーサの結果は使用せずに、与えられたパーサの結果を使用する。
      */
     bind<C>( p: () => Parser<A, C> ): Parser<A, C> {
         const self = this;
@@ -161,6 +162,7 @@ type Char = string
 
 /**
  * 文字のStreamを入力とするパーサ。
+ * @param <B> パース結果の型
  */
 export type CharParser<B> = Parser<Char, B>
 
