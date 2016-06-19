@@ -57,11 +57,14 @@ export function integer(): CharParser<Num> {
  * 数値のパーサを生成する。
  */
 export function num(): CharParser<Num> {
-    return integer().flatMap(
-        x => char('.').bind(integer).map(
-            y => new Num(x.getData() + '.' + y.getData()) )
-            .rollback()
-            .or( () => success<string, Num>( () => x ) ) )
+    return integer()
+        .flatMap( x => char('.')
+                  .bind(integer)
+                  .map( y => new Num(x.getData()
+                                     + '.'
+                                     + y.getData()) )
+                  .rollback()
+                  .or( () => success<string, Num>( () => x ) ) )
 }
 
 /**
@@ -70,13 +73,13 @@ export function num(): CharParser<Num> {
 export function varname(): CharParser<Var> {
     return alphabet()
         .rollback()
-        .or( () => oneOf('_') ).flatMap(
-            a => alphabet()
-                .rollback()
-                .or( digit )
-                .rollback()
-                .or( () => oneOf('_') ).manyStr().map(
-                    as => new Var(a + as) ) )
+        .or( () => oneOf('_') )
+        .flatMap( a => alphabet()
+                  .rollback()
+                  .or( digit )
+                  .rollback()
+                  .or( () => oneOf('_') ).manyStr().map(
+                      as => new Var(a + as) ) )
 }
 
 /**
@@ -86,13 +89,13 @@ export function funcall(): CharParser<FunCall> {
     return varname().flatMap(
         vn => char('(')
             .bind(spaces)
-            .bind(() => exprpm()
-                  .sepBy(() => spaces()
-                         .bind(() => char(','))
-                         .bind(spaces))
-                  .flatMap(
-                      es => spaces().bind(() => char(')')).map(
-                          _ => new FunCall(vn, es) ) ) ) )
+            .bind( () => exprpm()
+                   .sepBy( () => spaces()
+                           .bind( () => char(','))
+                           .bind(spaces))
+                   .flatMap( es => spaces()
+                             .bind(() => char(')'))
+                             .map( _ => new FunCall(vn, es) ) ) ) )
 }
 
 /**
@@ -102,10 +105,9 @@ export function paren(): CharParser<ExprPM> {
     return char('(')
         .bind(spaces)
         .bind(exprpm)
-        .flatMap(
-            e => spaces()
-                .bind(() => char(')'))
-                .map( _ => e ) )
+        .flatMap( e => spaces()
+                  .bind(() => char(')'))
+                  .map( _ => e ) )
 }
 
 /**
@@ -135,9 +137,9 @@ export function term(): CharParser<Term> {
             .bind(() => char('^'))
             .bind(spaces)
             .bind(term).map(
-                f => new PowTerm(t, f) ) )
-        .rollback()
-        .or(() => fact().map( f => new FactTerm(f) ) )
+                f => new PowTerm(t, f) )
+            .rollback()
+            .or(() => success<Char, Term>(() => new FactTerm(t))))
 }
 
 /**
@@ -146,26 +148,23 @@ export function term(): CharParser<Term> {
 export function exprmd(): CharParser<ExprMD> {
     return term().flatMap(
         x => spaces()
-            .bind(() => char('*'))
-            .bind(spaces)
-            .bind(exprmd).map(
-                y => new MultExprMD(x, y) ) )
-        .rollback()
-        .or(() => term().flatMap(
-            x => spaces()
-                .bind(() => char('/'))
-                .bind(spaces)
-                .bind(exprmd).map(
-                    y => new DivExprMD(x, y) ) ) )
-        .rollback()
-        .or(() => term().flatMap(
-            x => spaces()
-                .bind(() => char('%'))
-                .bind(spaces)
-                .bind(exprmd).map(
-                    y => new ModExprMD(x, y) ) ) )
-        .rollback()
-        .or(() => term().map( t => new TermExprMD(t) ))
+            .bind(() => char('*')
+                  .rollback()
+                  .or(() => char('/'))
+                  .rollback()
+                  .or(() => char('%')))
+            .flatMap( o => spaces()
+                      .bind(exprmd).map( y => {
+                          if( o == '*' )
+                              return new MultExprMD(x, y)
+                          else if( o == '/' )
+                              return new DivExprMD(x, y)
+                          else 
+                              return new ModExprMD(x, y)
+                      }) )
+            .rollback()
+            .or(() => success<Char, ExprMD>(
+                () => new TermExprMD(x) ) ) )
 }
 
 /**
@@ -174,19 +173,19 @@ export function exprmd(): CharParser<ExprMD> {
 export function exprpm(): CharParser<ExprPM> {
     return exprmd().flatMap(
             x => spaces()
-                .bind(() => char('+'))
-                .bind(spaces)
-                .bind(exprpm).map(
-                    y => new PlusExprPM(x, y) ) )
-        .rollback()
-        .or(() => exprmd().flatMap(
-            x => spaces()
-                .bind(() => char('-'))
-                .bind(spaces)
-                .bind(exprpm).map(
-                    y => new MinusExprPM(x, y) ) ) )
-        .rollback()
-        .or(() => exprmd().map( t => new MDExprPM(t) ) ) 
+            .bind(() => char('+')
+                  .rollback()
+                  .or(() => char('-')))
+            .flatMap( o => spaces()
+                      .bind(exprpm).map( y => {
+                          if( o == '+' )
+                              return new PlusExprPM(x, y)
+                          else
+                              return new MinusExprPM(x, y)
+                      } ) )
+            .rollback()
+            .or(() => success<Char, ExprPM>(
+                () => new MDExprPM(x) ) ) )
 }
 
 /**
@@ -200,21 +199,19 @@ export function def(): CharParser<Def> {
                   .sepBy(() => spaces()
                          .bind(() => char(','))
                          .bind(spaces))
-                  .flatMap(
-                      vs => spaces()
-                          .bind(() => char(')'))
-                          .bind(spaces)
-                          .bind(() => char('='))
-                          .bind(spaces)
-                          .bind(exprpm)
-                          .map(e => new Defun(vn, vs, e ) ) ) ) )
-        .rollback()
-        .or(() => varname().flatMap(
-            vn => spaces()
+                  .flatMap( vs => spaces()
+                            .bind(() => char(')'))
+                            .bind(spaces)
+                            .bind(() => char('='))
+                            .bind(spaces)
+                            .bind(exprpm)
+                            .map(e => new Defun(vn, vs, e ) ) ) )
+            .rollback()
+            .or(() => spaces()
                 .bind(() => char('='))
                 .bind(spaces)
                 .bind(exprpm)
-                .map(e => new Defvar(vn, e)) ) )
+                .map(e => new Defvar(vn, e))))
 }
 
 /**
@@ -222,8 +219,6 @@ export function def(): CharParser<Def> {
  */
 export function stmt(): CharParser<Statement> {
     return def()
-        .rollback()
-        .or(() => paren().flatMap(e => eof<Char>().map( _ => e)))
         .rollback()
         .or(exprpm)
         .flatMap( s => eof<Char>().map( _ => s ) )
