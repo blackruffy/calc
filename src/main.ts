@@ -9,6 +9,11 @@ window.onload = () => {
         mkSection(1)
     })
 
+    
+    document.getElementById("header-help").addEventListener("click", ev => {
+        location.href = "https://github.com/blackruffy/calc/wiki/%E4%BD%BF%E3%81%84%E6%96%B9"
+    })
+    
     window.addEventListener("resize", ev => {
         resize();
     })
