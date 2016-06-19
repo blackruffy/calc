@@ -3,6 +3,10 @@
 ブラウザ上で計算式を評価し計算結果を返す計算機アプリケーションです。
 変数の定義や関数の定義も行うことができます。
 
+使い方は、以下を参照してください。
+
+https://github.com/blackruffy/calc/wiki/%E4%BD%BF%E3%81%84%E6%96%B9
+
 ## 開発環境
 
 - 開発言語: TypeScript
@@ -33,6 +37,8 @@
 コマンドラインで以下のコマンドを実行します。
 
 ### 依存パッケージのインストール
+
+以下のパッケージがインストールされます。
 
 - typescript: TypeScriptのコンパイラです。
 - browserify: CommonJSスタイルのコードをブラウザ化します。
@@ -81,7 +87,9 @@ npm run browserify
 
 ## モジュール構成
 
+以下は主なモジュールです。
+
 - main.ts: エントリーポイント。index.htmlから呼ばれます。
 - ParserCombinator.ts: パーサコンビネータの実装。
-- CalcParser.ts: 計算式をパースする。
-- CalcProcessor.ts: 構文木を評価する。
+- CalcParser.ts: 計算式のパーサの実装。
+- CalcProcessor.ts: 構文木を評価します。
