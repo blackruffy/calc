@@ -1,6 +1,8 @@
 
 /**
  * Eitherモナド。
+ * @param <A> Leftの型
+ * @param <B> Rightの型
  */
 export interface Either<A, B> {
 

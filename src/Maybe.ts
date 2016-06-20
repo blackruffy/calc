@@ -1,6 +1,7 @@
 
 /**
  * Maybeモナド。
+ * @param <A> 保持する型
  */
 export interface Maybe<A> {
     flatMap<B>( func: (a: A) => Maybe<B> ): Maybe<B>;
