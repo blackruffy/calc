@@ -24,12 +24,19 @@ https://github.com/blackruffy/calc/wiki/%E4%BD%BF%E3%81%84%E6%96%B9
 ## ディレクトリ構成
 
 ```
-+-+- src: ソースコード
++-+- src/: ソースコードのディレクトリ
   |
-  +- test: 単体テストのソースコード
+  +- test/: 単体テストのソースコードのディレクトリ
   |
-  +- webapp: index.htmlを置く場所
-  
+  +- webapp/: index.htmlを置く場所
+  |
+  +- package.json: npmの設定ファイル
+  |
+  +- gulpfile.js: gulpの設定ファイル
+  |
+  +- typings.json: typingsの設定ファイル
+  |
+  +- tsconfig.json: tscの設定ファイル
 ```
 
 ## ビルド
@@ -39,6 +46,10 @@ https://github.com/blackruffy/calc/wiki/%E4%BD%BF%E3%81%84%E6%96%B9
 コマンドラインで以下のコマンドを実行します。
 
 ### 依存パッケージのインストール
+    
+```
+npm install
+```
 
 以下のパッケージがインストールされます。
 
@@ -49,29 +60,25 @@ https://github.com/blackruffy/calc/wiki/%E4%BD%BF%E3%81%84%E6%96%B9
 - gulp-mocha: mochaをgulpで使用できるようにします。
 - typings: TypeScriptの型定義管理ツールです。
 - vinyl-source-stream: browserifyをgulpで使用するために必要です。
-    
-```
-npm install
-```
 
 ### 型定義ファイルのインストール
-
-以下の型定義ファイルをインストールします。
-
-- mocha
-- node
 
 ```
 `npm bin`/typings install
 ```
 
-### コンパイル
+以下の型定義ファイルがインストールされます。
 
-TypeScriptで記述されたソースコードをJavaScriptに変換します。
+- mocha
+- node
+
+### コンパイル
 
 ```
 npm run tsc
 ```
+
+TypeScriptで記述されたソースコードがJavaScriptに変換されます。
 
 ### 単体テスト
 
@@ -81,11 +88,11 @@ npm run test
 
 ### ブラウザ化
 
-srcディレクトリ内のソースコードをまとめて、webapp/js/main.jsに出力します。
-
 ```
 npm run browserify
 ```
+
+srcディレクトリ内のソースコードをまとめて、webapp/js/main.jsに出力します。
 
 ## モジュール構成
 
