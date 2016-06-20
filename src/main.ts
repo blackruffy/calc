@@ -9,7 +9,7 @@ let hist: Array<string> = []
  */
 window.onload = () => {
 
-    // クリアボタン押下時の動作
+    // クリアボタン押下時に、スタックや履歴をクリアする。
     document.getElementById("clear-btn").addEventListener("click", ev => {
         clearStack()
         hist = []
@@ -17,7 +17,7 @@ window.onload = () => {
         mkSection(1)
     })
 
-    // ヘルプ押下時の動作
+    // ヘルプ押下時に、ヘルプページに移動する。
     document.getElementById("header-help").addEventListener("click", ev => {
         location.href = "https://github.com/blackruffy/calc/wiki/%E4%BD%BF%E3%81%84%E6%96%B9"
     })
@@ -27,7 +27,7 @@ window.onload = () => {
         resize();
     })
 
-    // 入力フィールドを作成する。
+    // 最初の入力フィールドを作成する。
     mkSection(1)
 
     // 表示サイズ調整
@@ -97,20 +97,21 @@ function mkSection( idx: number ): void {
 `
     main.appendChild(self)
     resize()
+    
     const input = <HTMLInputElement>document.getElementById(`input-text${idx}`)
     input.focus()
 
     let currIdx = idx
     
     input.addEventListener("keydown", ev => {
-        // 上ボタンで前の式を参照する
+        // 上ボタンで前の履歴を参照する
         if( ev.which == 38 ) {
             if( currIdx > 1 ) {
                 currIdx--
                 input.value = hist[currIdx]
             }
         }
-        // 下ボタンで次の式を参照する
+        // 下ボタンで次の履歴を参照する
         else if( ev.which == 40 ) {
             if( currIdx < idx - 1 ) {
                 currIdx++
@@ -127,7 +128,8 @@ function mkSection( idx: number ): void {
             const outputLine = (<HTMLElement>document.getElementById(`output-line${idx}`))
             const errorLine = (<HTMLElement>document.getElementById(`error-line${idx}`))
             const progLine = (<HTMLElement>document.getElementById(`progress-line${idx}`))
-            
+
+            // エラー処理関数
             const error = (msg: string) => {
                 outputLine.style.display = "none";
                 errorLine.style.display = "block";
