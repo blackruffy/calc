@@ -6,7 +6,8 @@
   "scripts": {
     "tsc": "tsc",
     "browserify": "gulp browserify",
-    "test": "gulp mocha"
+    "test": "gulp mocha",
+    "doc": "typedoc --out ./webapp/doc/ ./src"
   },
   "repository": {
     "type": "git",

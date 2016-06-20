@@ -110,4 +110,4 @@ srcディレクトリ内のソースコードをまとめて、webapp/js/main.js
 
 ## API ドキュメント
 
-http://calc-1347.appspot.com/
+http://calc-1347.appspot.com/doc/index.html
