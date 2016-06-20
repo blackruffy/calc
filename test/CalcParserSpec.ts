@@ -66,19 +66,19 @@ function left<B>( s: string ): Either<string, B> {
 }
 
 describe('integer', function () {
-    it('integer 1', function () {
+    it('should parse integer number 1', function () {
         assert.deepEqual(
             runParser(Calc.integer(), '1234'),
             right(new Num('1234'))
         )
     })
-    it('integer 2', function () {
+    it('should parse integer number 2', function () {
         assert.deepEqual(
             runParser(Calc.integer(), '1234.567'),
             right(new Num('1234'))
         )
     })
-    it('integer 3', function () {
+    it('should failed to parse variable', function () {
         assert.deepEqual(
             runParser(Calc.integer(), 'abc'),
             left('aではなく数字ではありませんか？')
@@ -87,19 +87,19 @@ describe('integer', function () {
 })
 
 describe('number', function () {
-    it('num 1', function () {
+    it('should parse integer number 1', function () {
         assert.deepEqual(
             runParser(Calc.num(), '1234'),
             right(new Num('1234'))
         )
     })
-    it('num 2', function () {
+    it('should parse floating point number', function () {
         assert.deepEqual(
             runParser(Calc.num(), '1234.567'),
             right(new Num('1234.567'))
         )
     })
-    it('num 3', function () {
+    it('should parse integer number 2', function () {
         assert.deepEqual(
             runParser(Calc.num(), '1234.'),
             right(new Num('1234'))
@@ -108,31 +108,31 @@ describe('number', function () {
 })
 
 describe('varname', function () {
-    it('could be hoge', function () {
+    it('should parse variable: hoge', function () {
         assert.deepEqual(
             runParser(Calc.varname(), 'hoge'),
             right(new Var('hoge'))
         )
     })
-    it('could be _hoge', function () {
+    it('should parse variable: _hoge', function () {
         assert.deepEqual(
             runParser(Calc.varname(), '_hoge'),
             right(new Var('_hoge'))
         )
     })
-    it('could be hoge_123', function () {
+    it('should parse variable: hoge_123', function () {
         assert.deepEqual(
             runParser(Calc.varname(), 'hoge_123'),
             right(new Var('hoge_123'))
         )
     })
-    it('could be hoge123', function () {
+    it('should parse variable: hoge123', function () {
         assert.deepEqual(
             runParser(Calc.varname(), 'hoge123.456'),
             right(new Var('hoge123'))
         )
     })
-    it('should be fail', function () {
+    it('should fail to parse number', function () {
         assert.deepEqual(
             runParser(Calc.varname(), '1'),
             left("1ではなく_の中の１文字ではありませんか？")
@@ -141,7 +141,7 @@ describe('varname', function () {
 })
 
 describe('funcall', function () {
-    it('could be funcall 1', function () {
+    it('should parse a literal of calling function', function () {
         assert.deepEqual(
             runParser(Calc.funcall(), 'hoge(1, 2, 3)'),
             right(new FunCall(
@@ -181,19 +181,19 @@ describe('funcall', function () {
 })
 
 describe('fact', function () {
-    it('could be var', function () {
+    it('should parse variable: hoge', function () {
         assert.deepEqual(
             runParser(Calc.fact(), 'hoge'),
             right(new VarFact(new Var('hoge')))
         )
     })
-    it('could be num', function () {
+    it('should parse number: 123.456', function () {
         assert.deepEqual(
             runParser(Calc.fact(), '123.456'),
             right(new NumFact(new Num('123.456')))
         )
     })
-    it('could be -num', function () {
+    it('should parse nevative number: -123.456', function () {
         assert.deepEqual(
             runParser(Calc.fact(), '-123.456'),
             right(new NegFact(new NumFact(new Num('123.456'))))
@@ -202,7 +202,7 @@ describe('fact', function () {
 })
 
 describe('term', function () {
-    it('could be term 1', function () {
+    it('should parse power: 123^2', function () {
         assert.deepEqual(
             runParser(Calc.term(), '123^2'),
             right(new PowTerm(
@@ -211,7 +211,7 @@ describe('term', function () {
             ))
         )
     })
-    it('could be term 2', function () {
+    it('should parse power: a^b', function () {
         assert.deepEqual(
             runParser(Calc.term(), 'a^b'),
             right(new PowTerm(
@@ -220,7 +220,7 @@ describe('term', function () {
             ))
         )
     })
-    it('could be term 3', function () {
+    it('should parse power which contains spaces: a ^  b', function () {
         assert.deepEqual(
             runParser(Calc.term(), 'a ^  b'),
             right(new PowTerm(
@@ -229,7 +229,7 @@ describe('term', function () {
             ))
         )
     })
-    it('could be term 4', function () {
+    it('should parse variable: a', function () {
         assert.deepEqual(
             runParser(Calc.term(), 'a'),
             right(new FactTerm(new VarFact(new Var('a'))))
@@ -238,7 +238,7 @@ describe('term', function () {
 })
 
 describe('exprmd', function () {
-    it('could be exprmd 1', function () {
+    it('should parse multiply: 123 * 456', function () {
         assert.deepEqual(
             runParser(Calc.exprmd(), '123 * 456'),
             right(new MultExprMD(
@@ -247,7 +247,7 @@ describe('exprmd', function () {
             ))
         )
     })
-    it('could be exprmd 2', function () {
+    it('should parse multiply: abc * 2', function () {
         assert.deepEqual(
             runParser(Calc.exprmd(), 'abc * 2'),
             right(new MultExprMD(
@@ -256,7 +256,7 @@ describe('exprmd', function () {
             ))
         )
     })
-    it('could be exprmd 3', function () {
+    it('should parse divide: 123 / 456', function () {
         assert.deepEqual(
             runParser(Calc.exprmd(), '123 / 456'),
             right(new DivExprMD(
@@ -265,7 +265,7 @@ describe('exprmd', function () {
             ))
         )
     })
-    it('could be exprmd 4', function () {
+    it('should parse multiply and power', function () {
         assert.deepEqual(
             runParser(Calc.exprmd(), '123 * 456 ^ abc'),
             right(new MultExprMD(
@@ -280,7 +280,7 @@ describe('exprmd', function () {
 })
 
 describe('exprpm', function () {
-    it('could be exprpm 1', function () {
+    it('should parse plus: 123 + 456', function () {
         assert.deepEqual(
             runParser(Calc.exprpm(), '123 + 456'),
             right(new PlusExprPM(
@@ -296,7 +296,7 @@ describe('exprpm', function () {
             ))
         )
     })
-    it('could be exprpm 2', function () {
+    it('should parse plus and divide', function () {
         assert.deepEqual(
             runParser(Calc.exprpm(), '123 + 456 / 3'),
             right(new PlusExprPM(
@@ -317,7 +317,7 @@ describe('exprpm', function () {
             ))
         )
     })
-    it('could be exprpm 3', function () {
+    it('should parse complecated expression', function () {
         assert.deepEqual(
             runParser(Calc.exprpm(), 'a * (123 + 456) / ( (b + c)*f(x, y, z) )'),
             right(toPM(mult(
@@ -341,7 +341,7 @@ describe('exprpm', function () {
 })
 
 describe('paren', function () {
-    it('could be paren 1', function () {
+    it('should parse parenthese 1', function () {
         assert.deepEqual(
             runParser(Calc.paren(), '(1 + 2)'),
             right(plus(
@@ -350,7 +350,7 @@ describe('paren', function () {
             ))
         )
     })
-    it('could be paren 2', function () {
+    it('should parse parenthese 2', function () {
         assert.deepEqual(
             runParser(Calc.paren(), '(1 + 2) + 3'),
             right(plus(
@@ -362,7 +362,7 @@ describe('paren', function () {
 })
 
 describe('defun', function () {
-    it('could be defun 1', function () {
+    it('should parse literal of defining function', function () {
         assert.deepEqual(
             runParser(Calc.def(), 'hoge(x, y, z) = x + y + z'),
             right(new Defun(
@@ -393,7 +393,7 @@ describe('defun', function () {
         )
     })
     
-    it('could be defun 2', function () {
+    it('should fail to parse invalid literal of defining function', function () {
         
         assert.deepEqual(
             runParser(Calc.def(), 'hoge(1) = 1'),
@@ -401,7 +401,7 @@ describe('defun', function () {
         )
     })
     
-    it('could be defvar 1', function () {
+    it('should fail to parse literal of defining variable', function () {
         assert.deepEqual(
             runParser(Calc.def(), 'hoge = 1 + 2 + 3'),
             right(new Defvar(

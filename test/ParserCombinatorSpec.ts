@@ -22,32 +22,32 @@ function left<B>( s: string ): Either<string, B> {
 }
 
 describe('char parser', function () {
-    it('parse a charactor 1', function () {
+    it('should parse a charactor 1', function () {
         assert.deepEqual(
             runParser(Parser.char('a'), 'a'),
             right('a')
         )
     })
-    it('parse a charactor 2', function () {
+    it('should parse a charactor 2', function () {
         assert.deepEqual(
             runParser(Parser.char('a'), 'b'),
             left('bではなくaではありませんか？')
         )
     })
-    it('parse a charactor 3', function () {
+    it('should parse a charactor 3', function () {
         const r = Parser.char('a').parse(new CharStream('abc'))
         assert(r.getStream().toString(), 'bc')
     })
 })
 
 describe('string parser', function () {
-    it('parse string 1', function () {
+    it('should parse string 1', function () {
         assert.deepEqual(
             runParser(Parser.str('hello'), 'hello world'),
             right('hello')
         )
     })
-    it('parse string 2', function () {
+    it('should parse string 2', function () {
         const r = Parser.str('hoge').rollback().parse(new CharStream('hello world'))
         assert.equal(
             r.getData().getLeftOrElse(() => 'error'),
@@ -60,14 +60,14 @@ describe('string parser', function () {
     })
 })
 
-describe('parse one of charactors', function () {
-    it('oneOf 1', function () {
+describe('oneOf', function () {
+    it('should parse one of given characters', function () {
         assert.deepEqual(
             runParser(Parser.oneOf('abcd'), 'a'),
             right('a')
         )
     })
-    it('oneOf 2', function () {
+    it('should fail to parse none of given characters', function () {
         assert.deepEqual(
             runParser(Parser.oneOf('abcd'), 'f'),
             left('fではなくabcdの中の１文字ではありませんか？')
@@ -75,14 +75,14 @@ describe('parse one of charactors', function () {
     })
 })
 
-describe('parse none of charactors', function () {
-    it('noneOf 1', function () {
+describe('noneOf', function () {
+    it('should fail to parse one of given characters', function () {
         assert.deepEqual(
             runParser(Parser.noneOf('abcd'), 'a'),
             left('aではなく「abcd」以外の文字ではありませんか？')
         )
     })
-    it('noneOf 2', function () {
+    it('should parse none of given characters', function () {
         assert.deepEqual(
             runParser(Parser.noneOf('abcd'), 'f'),
             right('f')
@@ -90,26 +90,29 @@ describe('parse none of charactors', function () {
     })
 })
 
-describe('parse alphabet and digits', function () {
-    it('alphabet 1', function () {
+describe('alphabet', function () {
+    it('should parse alphabet', function () {
         assert.deepEqual(
             runParser(Parser.alphabet(), 'a'),
             right('a')
         )
     })
-    it('alphabet 2', function () {
+    it('should fail to parse number', function () {
         assert.deepEqual(
             runParser(Parser.alphabet(), '1'),
             left('1ではなくアルファベットではありませんか？')
         )
     })
-    it('digit 1', function () {
+})
+
+describe('digit', function () {
+    it('should parse digit number', function () {
         assert.deepEqual(
             runParser(Parser.digit(), '2'),
             right('2')
         )
     })
-    it('digit 2', function () {
+    it('should fail to parse symbol', function () {
         assert.deepEqual(
             runParser(Parser.digit(), '-'),
             left('-ではなく数字ではありませんか？')
@@ -118,7 +121,7 @@ describe('parse alphabet and digits', function () {
 })
 
 
-describe('parse many', function () {
+describe('many', function () {
     it('many 1', function () {
         assert.deepEqual(
             runParser(Parser.digit().many(), '1234abc'),
@@ -191,7 +194,7 @@ describe('parse many', function () {
     })
 })
 
-describe('parse separate by', function () {
+describe('sepBy', function () {
     it('sepBy 1', function () {
         assert.deepEqual(
             runParser(Parser.digit().sepBy(() => Parser.char(',')), '1,2,3'),
@@ -218,7 +221,7 @@ describe('parse separate by', function () {
     })
 })
 
-describe('or parser', function () {
+describe('or', function () {
     it('or 1', function () {
         assert.deepEqual(
             runParser(Parser.str('abc').or(()  => Parser.str('xyz')), 'abc'),
@@ -239,7 +242,7 @@ describe('or parser', function () {
     })
 })
 
-describe('eof parser', function () {
+describe('eof', function () {
     it('eof 1', function () {
         assert.deepEqual(
             runParser(Parser.eof<Char>(), ''),

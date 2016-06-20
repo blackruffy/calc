@@ -18,7 +18,7 @@ function left<B>( s: string ): Either<string, B> {
 }
 
 describe('evalVar', function () {
-    it('1', function () {
+    it('should be able to evaluate default constant PI', function () {
         assert.deepEqual(
             E.evalVar(S.mkvar('PI')),
             right(Math.PI)
@@ -27,7 +27,7 @@ describe('evalVar', function () {
 })
 
 describe('evalNum', function () {
-    it('1', function () {
+    it('should be able to evaluate number', function () {
         assert.deepEqual(
             E.evalNum(S.mknum('1')),
             right(1)
@@ -36,7 +36,7 @@ describe('evalNum', function () {
 })
 
 describe('evalFunCall', function () {
-    it('1', function () {
+    it('should be able to evaluate sin function', function () {
         assert.deepEqual(
             E.evalFunCall(S.mkfun(
                 S.mkvar('sin'),
@@ -47,37 +47,37 @@ describe('evalFunCall', function () {
 })
 
 describe('evalExprPM', function () {
-    it('1', function () {
+    it('should evaluate expression with + and *', function () {
         assert.deepEqual(
             P.parse('1 + 2 * 3').getData().flatMap(s => E.evalExprPM(<S.ExprPM>s) ),
             right(7)
         )
     })
-    it('2', function () {
+    it('should evaluate sin function which takes PI/2', function () {
         assert.deepEqual(
             P.parse('sin( PI / 2 )').getData().flatMap(s => E.evalExprPM(<S.ExprPM>s) ),
             right(1)
         )
     })
-    it('3', function () {
+    it('should evaluate 2 to the 3', function () {
         assert.deepEqual(
             P.parse('2^3').getData().flatMap(s => E.evalExprPM(<S.ExprPM>s) ),
             right(8)
         )
     })
-    it('4', function () {
+    it('should fail to evaluate &', function () {
         assert.deepEqual(
             P.parse('2 & 3').getData().flatMap(s => E.evalExprPM(<S.ExprPM>s) ),
             left("' & 3'を認識できません。")
         )
     })
-    it('5', function () {
+    it('should evaluate %', function () {
         assert.deepEqual(
             P.parse('11 % 3').getData().flatMap(s => E.evalExprPM(<S.ExprPM>s) ),
             right(2)
         )
     })
-    it('6', function () {
+    it('should evaluate the number divided by zero', function () {
         assert.deepEqual(
             P.parse('-11 / 0').getData().flatMap(s => E.evalExprPM(<S.ExprPM>s) ),
             right(-Infinity)
@@ -86,7 +86,7 @@ describe('evalExprPM', function () {
 })
 
 describe('evalDef', function () {
-    it('1', function () {
+    it('should define variable', function () {
         assert.deepEqual(
             P.parse('x = 1').getData().flatMap(s => E.evalDef(<S.Def>s) ),
             right("変数'x'を定義しました。")
@@ -96,7 +96,7 @@ describe('evalDef', function () {
             new Just(1)
         )
     })
-    it('2', function () {
+    it('should fail to use undefined variable', function () {
         assert.deepEqual(
             P.parse('x = a').getData().flatMap(s => E.evalDef(<S.Def>s) ),
             left("a は定義されていません。")
@@ -110,7 +110,7 @@ describe('evalDef', function () {
             new Just(2)
         )
     })
-    it('3', function () {
+    it('should be able to use defined variable', function () {
         assert.deepEqual(
             P.parse('y = x').getData().flatMap(s => E.evalDef(<S.Def>s) ),
             right("変数'y'を定義しました。")
@@ -120,7 +120,7 @@ describe('evalDef', function () {
             new Just(2)
         )
     })
-    it('4', function () {
+    it('should define function and call defined function', function () {
         assert.deepEqual(
             P.parse('f(x, y) = x + y').getData().flatMap(s => E.evalDef(<S.Def>s) ),
             right("関数'f'を定義しました。")
@@ -134,7 +134,7 @@ describe('evalDef', function () {
             right(6)
         )
     })
-    it('5', function () {
+    it('should fail to call function recursively', function () {
         assert.deepEqual(
             P.parse('g(x, y) = g(x, y)').getData().flatMap(s => E.evalDef(<S.Def>s) ),
             right("関数'g'を定義しました。")
