@@ -134,7 +134,7 @@ describe('evalDef', function () {
             right(6)
         )
     })
-    it('should fail to call function recursively', function () {
+    it('should fail with calling function recursively', function () {
         assert.deepEqual(
             P.parse('g(x, y) = g(x, y)').getData().flatMap(s => E.evalDef(<S.Def>s) ),
             right("関数'g'を定義しました。")
@@ -142,6 +142,16 @@ describe('evalDef', function () {
         assert.deepEqual(
             P.parse('g(1, 2)').getData().flatMap(s => E.evalExprPM(<S.ExprPM>s) ),
             left("関数'g'は再帰的に呼び出すことはできません。")
+        )
+    })
+    it('should fail with invalid number of arguments', function () {
+        assert.deepEqual(
+            P.parse('sin(1, 2)').getData().flatMap(s => E.evalExprPM(<S.ExprPM>s) ),
+            right("sinの引数の数が正しくありません。1個です。")
+        )
+        assert.deepEqual(
+            P.parse('f(1, 2, 3)').getData().flatMap(s => E.evalExprPM(<S.ExprPM>s) ),
+            left("fの引数の数が正しくありません。2個です。")
         )
     })
 })

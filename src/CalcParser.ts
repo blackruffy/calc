@@ -221,8 +221,12 @@ export function stmt(): CharParser<Statement> {
     return def()
         .rollback()
         .or(exprpm)
-        .flatMap( s => eof<Char>().map( _ => s ) )
-        .onFailure( (s, e) => '\'' + s.toString() + '\'を認識できません。' )
+        .flatMap( s => eof<Char>()
+                  .map( _ => s )
+                  .onFailure( (s, e) => '\''
+                              + s.toString()
+                              + '\'を認識できません。' ) )
+        
 }
 
 /**

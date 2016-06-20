@@ -44,15 +44,13 @@ export class CallStack {
         new SMap<FrameType>({
             PI: Math.PI,
             E: Math.E,
-            abs: new NativeFunc( args => Math.abs.apply(null, args) ),
-            sin: new NativeFunc( args => Math.sin.apply(null, args) ),
-            cos: new NativeFunc( args => Math.cos.apply(null, args) ),
-            tan: new NativeFunc( args => Math.tan.apply(null, args) ),
-            log: new NativeFunc( args => Math.log.apply(null, args) ),
-            //log10: new NativeFunc( args => Math.log10.apply(null, args) ),
-            //log2: new NativeFunc( args => Math.log2.apply(null, args) ),
-            exp: new NativeFunc( args => Math.exp.apply(null, args) ),
-            sqrt: new NativeFunc( args => Math.sqrt.apply(null, args) ),
+            abs: new NativeFunc( 1, args => Math.abs.apply(null, args) ),
+            sin: new NativeFunc( 1, args => Math.sin.apply(null, args) ),
+            cos: new NativeFunc( 1, args => Math.cos.apply(null, args) ),
+            tan: new NativeFunc( 1, args => Math.tan.apply(null, args) ),
+            log: new NativeFunc( 1, args => Math.log.apply(null, args) ),
+            exp: new NativeFunc( 1, args => Math.exp.apply(null, args) ),
+            sqrt: new NativeFunc( 1, args => Math.sqrt.apply(null, args) ),
         }),
         new Nothing<string>()
     )

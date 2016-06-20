@@ -207,45 +207,59 @@ export function evalFact( fact: Fact ): Result {
  * FunCallを評価する。
  */
 export function evalFunCall( funcall: FunCall ): Result {
-    const n = funcall.name.getData()
+    const n = funcall.name.getData() // 関数名
+    // 再帰的に呼びだされているかチェックする。
     if( CallStack.findCallee( n ).isNothing() ) {
         return CallStack.findVar( n ).map( f => {
+            // ユーザ定義関数の場合
             if( f instanceof Defun ) {
                 const defun = <Defun>f
-                return funcall.args.reduce<Either<string, any>>( (r, a) => r.flatMap( o => {
-                    const k = defun.args[o.idx].getData()
-                    o.idx++
-                    o.frame.setCallee( n )
-                    if( o.frame.getVars().get( k ).isNothing() ) {
-                        return evalExprPM(a).map( v => {
-                            o.frame.getVars().set( k, v )
-                            return o
-                        })
-                    }
-                    else return error(k + ' は既に定義されています。')
-                } ), new Right<string, any>(
-                    { idx: 0, frame: emptyFrame<FrameType>() }
-                ) ).flatMap( o => {
-                    CallStack.push( o.frame )
-                    const r = evalExprPM(defun.expr)
-                    CallStack.pop()
-                    return r
-                } )
+                if( defun.args.length == funcall.args.length ) {
+                    // フレームを生成する
+                    const frame = emptyFrame<FrameType>()
+                    // 呼び出し元を設定する
+                    frame.setCallee( n )
+                    // 引数の変数と値をマッピングする
+                    return funcall.args.reduce<Either<string, any>>( (r, a) => r.flatMap( o => {
+                        const k = defun.args[o.idx].getData()
+                        o.idx++
+                        if( o.frame.getVars().get( k ).isNothing() ) {
+                            return evalExprPM(a).map( v => {
+                                o.frame.getVars().set( k, v )
+                                return o
+                            })
+                        }
+                        else return error(k + ' は既に定義されています。')
+                    } ), new Right<string, any>(
+                        { idx: 0, frame: frame }
+                    ) ).flatMap( o => {
+                        CallStack.push( o.frame )
+                        const r = evalExprPM(defun.expr)
+                        CallStack.pop()
+                        return r
+                    } )
+                }
+                else return error(n + 'の引数の数が正しくありません。' + defun.args.length + '個です。')
             }
+            // ネイティブ関数の場合
             else if( f instanceof NativeFunc ) {
-                return funcall
-                    .args
-                    .reduce<Either<string, Array<number>>>(
-                        (r, a) => r.flatMap(
-                            xs => evalExprPM(a).map(
-                                x => {
-                                    xs.push(x)
-                                    return xs
-                                }
-                            )
-                        ),
-                        new Right<string, Array<number>>([]))
-                    .map( xs => (<NativeFunc>f).eval(xs) )
+                const nf = <NativeFunc>f
+                if( nf.getNArgs() == funcall.args.length ) {
+                    return funcall
+                        .args
+                        .reduce<Either<string, Array<number>>>(
+                            (r, a) => r.flatMap(
+                                xs => evalExprPM(a).map(
+                                    x => {
+                                        xs.push(x)
+                                        return xs
+                                    }
+                                )
+                            ),
+                            new Right<string, Array<number>>([]))
+                        .map( xs => nf.eval(xs) )
+                }
+                else return error(n + 'の引数の数が正しくありません。' + nf.getNArgs() + '個です。')
             }
             else return error(n + ' は関数ではありません。')
         }).getOrElse(() => error(n + ' は定義されていません。'))
