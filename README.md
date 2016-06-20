@@ -14,7 +14,7 @@ https://github.com/blackruffy/calc/wiki/%E4%BD%BF%E3%81%84%E6%96%B9
 - 開発言語: TypeScript
 - パッケージ管理: npm
 - タスクランナー: gulp
-- ビルドツール: tsc
+- コンパイラ: tsc
 - 型定義管理ツール: typings
 - 単体テスト: mocha
 - ブラウザ化ツール: browserify
