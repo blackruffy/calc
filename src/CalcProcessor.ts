@@ -1,5 +1,6 @@
 /**
- * 構文を処理するモジュール
+ * 構文を処理するモジュール。
+ * 
  */
 
 import { Maybe, Just, Nothing } from "./Maybe"
@@ -42,12 +43,35 @@ import { CallStack, FrameType, StackType } from "./CallStack"
 type Result = Either<string, number>
 
 /**
+ * ソースをパースし評価する。
+ * @param d 計算式の文字列
+ * @return 計算結果
+ */
+export function evaluate( d: string ): Either<string, string | number> {
+    return parse(d).getData().flatMap( s => {
+        if( s instanceof Def ) return <Either<string, string|number>>evalDef(<Def>s)
+        else if( s instanceof ExprPM ) return <Either<string, string|number>>evalExprPM(<ExprPM>s)
+        else return <Either<string, string|number>>error('parsed result should be Def or ExprPM')
+    })
+}
+
+/**
+ * スタックをクリアする。
+ */
+export function clearStack(): void {
+    CallStack.clearStack()
+}
+
+/**
  * エラーを生成する。
  */
 export function error( msg: string ): Result {
     return new Left<string, number>(msg)
 }
 
+/**
+ * 変数や関数の定義を評価する。
+ */
 export function evalDef( def: Def ): Either<string, string> {
     if( def instanceof Defvar ) {
         const p = <Defvar>def
@@ -253,22 +277,4 @@ export function evalVar( name: Var ): Result {
  */
 export function evalNum( num: Num ): Result {
     return new Right<string, number>(parseFloat(num.getData()))
-}
-
-/**
- * ソースをパースし評価する。
- */
-export function evaluate( d: string ): Either<string, string | number> {
-    return parse(d).getData().flatMap( s => {
-        if( s instanceof Def ) return <Either<string, string|number>>evalDef(<Def>s)
-        else if( s instanceof ExprPM ) return <Either<string, string|number>>evalExprPM(<ExprPM>s)
-        else return <Either<string, string|number>>error('parsed result should be Def or ExprPM')
-    })
-}
-
-/**
- * スタックをクリアする。
- */
-export function clearStack(): void {
-    CallStack.clearStack()
 }

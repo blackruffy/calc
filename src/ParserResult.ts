@@ -7,15 +7,40 @@ import { Either, Right, Left } from "./Either"
 
 /**
  * パース結果を表現するクラス。
- * A: Streamの型
- * B: パース結果の型
+ * @param <A> Streamの型
+ * @param <B> パース結果の型
  */
 export interface Result<A, B> {
-    flatMap<C>( func: (s: Stream<A>, b: B) => Result<A, C> ): Result<A, C>
+
+    /**
+     * 結果を合成する。
+     */
+    flatMap<C>( func: (s: Stream<A>, b: B) => Result<A, C> ): Result<A, C>;
+
+    /**
+     * 結果が失敗した場合に、代わりの結果を生成する。
+     */
     orElse( func: (s: Stream<A>, e: string) => Result<A, B> ): Result<A, B>;
+
+    /**
+     * 結果のデータを取得する。
+     * 失敗していた場合は、代わりのデータを与える。
+     */
     getDataOrElse( func: () => B ): B;
+
+    /**
+     * 消費されてないストリームを取得する。
+     */
     getStream(): Stream<A>;
+
+    /**
+     * 結果のデータを取得する。
+     */
     getData(): Either<string, B>;
+
+    /**
+     * 結果が成功したか判定する。
+     */
     isSuccess(): boolean;
 }
 

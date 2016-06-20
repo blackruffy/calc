@@ -23,7 +23,7 @@ export class Parser<A, B> {
     }
 
     /**
-     * パーサを合成してパーサを生成する。
+     * パーサを合成して新しいパーサを生成する。
      */
     flatMap<C>( func: (b: B) => Parser<A, C> ): Parser<A, C> {
         const self = this;

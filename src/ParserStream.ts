@@ -6,10 +6,22 @@ type Char = string
 
 /**
  * パーサに入力するA型のストリーム。
+ * @param <A> ストリームが保持するデータの型
  */
 export interface Stream<A> {
+    /**
+     * 先頭のデータを取得する。
+     */
     head(): Maybe<A>;
+
+    /**
+     * 先頭のデータを除いた残りのストリームを取得する。
+     */
     tail(): Stream<A>;
+
+    /**
+     * ストリームの位置を取得する。
+     */
     position(): Position
 }
 
