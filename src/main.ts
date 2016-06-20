@@ -17,11 +17,6 @@ window.onload = () => {
         mkSection(1)
     })
 
-    // ヘルプ押下時に、ヘルプページに移動する。
-    document.getElementById("header-help").addEventListener("click", ev => {
-        location.href = "https://github.com/blackruffy/calc/wiki/%E4%BD%BF%E3%81%84%E6%96%B9"
-    })
-
     // ウインドウのサイズが変更された時の動作
     window.addEventListener("resize", ev => {
         resize();
