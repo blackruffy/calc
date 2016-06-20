@@ -18,6 +18,7 @@ https://github.com/blackruffy/calc/wiki/%E4%BD%BF%E3%81%84%E6%96%B9
 - 型定義管理ツール: typings
 - 単体テスト: mocha
 - ブラウザ化ツール: browserify
+- ドキュメント化: typedoc
 
 ※上記以外の外部ライブラリは使用していません。
 
@@ -60,6 +61,7 @@ npm install
 - gulp-mocha: mochaをgulpで使用できるようにします。
 - typings: TypeScriptの型定義管理ツールです。
 - vinyl-source-stream: browserifyをgulpで使用するために必要です。
+- typedoc: API ドキュメントを生成します。
 
 ### 型定義ファイルのインストール
 
@@ -105,3 +107,7 @@ srcディレクトリ内のソースコードをまとめて、webapp/js/main.js
 - CalcParser.ts: 計算式のパーサの実装です。
 - CalcProcessor.ts: 構文木を評価します。
 - CalcStructure.ts: 構文の構造を表現します。
+
+## API ドキュメント
+
+http://calc-1347.appspot.com/
