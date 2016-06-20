@@ -42,7 +42,24 @@ https://github.com/blackruffy/calc/wiki/%E4%BD%BF%E3%81%84%E6%96%B9
 
 ## ビルド
 
-※ビルドするにはnodejs, npmが必要です。
+- ビルドするにはnodejs, npmが必要です。
+- Linuxでは次の環境でビルドを確認しています。
+
+    - ubuntu: 16.04 LTS
+    - node.js: v5.1.0
+    - npm: 3.3.12
+
+- Windowsでは次の環境でビルドを確認しています。
+
+    - Windows 10
+    - node.js: v4.4.5
+    - npm: 2.15.5
+
+- Macでは次の環境でビルドを確認しています。
+
+    - OS X Elcapitan
+    - node.js:
+    - npm:
 
 コマンドラインで以下のコマンドを実行します。
 
