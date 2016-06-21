@@ -52,10 +52,10 @@ export function evaluate( d: string ): Either<string, string | number> {
         .getData()
         .mapLeft( e => `${e.getMessage()}(${e.getPosition().getCount()+1}文字目)`)
         .flatMap( s => {
-        if( s instanceof Def ) return <Either<string, string|number>>evalDef(<Def>s)
-        else if( s instanceof ExprPM ) return <Either<string, string|number>>evalExprPM(<ExprPM>s)
-        else return <Either<string, string|number>>error('parsed result should be Def or ExprPM')
-    })
+            if( s instanceof Def ) return <Either<string, string|number>>evalDef(<Def>s)
+            else if( s instanceof ExprPM ) return <Either<string, string|number>>evalExprPM(<ExprPM>s)
+            else return <Either<string, string|number>>error('parsed result should be Def or ExprPM')
+        })
 }
 
 /**
