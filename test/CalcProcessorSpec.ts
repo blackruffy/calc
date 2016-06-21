@@ -53,10 +53,22 @@ describe('evalFunCall', function () {
 })
 
 describe('evalExprPM', function () {
+    it('should evaluate expression with + and -', function () {
+        assert.deepEqual(
+            parse('10 - 5 + 3').flatMap(s => E.evalExprPM(<S.ExprPM>s) ),
+            right(8)
+        )
+    })
     it('should evaluate expression with + and *', function () {
         assert.deepEqual(
             parse('1 + 2 * 3').flatMap(s => E.evalExprPM(<S.ExprPM>s) ),
             right(7)
+        )
+    })
+    it('should evaluate expression with * and /', function () {
+        assert.deepEqual(
+            parse('10 / 2 * 3').flatMap(s => E.evalExprPM(<S.ExprPM>s) ),
+            right(15)
         )
     })
     it('should evaluate sin function which takes PI/2', function () {
@@ -69,6 +81,24 @@ describe('evalExprPM', function () {
         assert.deepEqual(
             parse('2^3').flatMap(s => E.evalExprPM(<S.ExprPM>s) ),
             right(8)
+        )
+    })
+    it('should evaluate 2^3^2', function () {
+        assert.deepEqual(
+            parse('2^3^2').flatMap(s => E.evalExprPM(<S.ExprPM>s) ),
+            right(64)
+        )
+    })
+    it('should evaluate (2^3)^2', function () {
+        assert.deepEqual(
+            parse('(2^3)^2').flatMap(s => E.evalExprPM(<S.ExprPM>s) ),
+            right(64)
+        )
+    })
+    it('should evaluate 2^(3^2)', function () {
+        assert.deepEqual(
+            parse('2^(3^2)').flatMap(s => E.evalExprPM(<S.ExprPM>s) ),
+            right(512)
         )
     })
     it('should fail to evaluate &', function () {

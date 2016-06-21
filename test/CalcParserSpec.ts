@@ -207,27 +207,27 @@ describe('term', function () {
     it('should parse power: 123^2', function () {
         assert.deepEqual(
             runParser(Calc.term(), '123^2'),
-            right(new PowTerm(
-                new NumFact(new Num('123')),
-                new FactTerm(new NumFact(new Num('2')))
+            right(pow(
+                toTerm(fnum(mknum('123'))),
+                fnum(mknum('2'))
             ))
         )
     })
     it('should parse power: a^b', function () {
         assert.deepEqual(
             runParser(Calc.term(), 'a^b'),
-            right(new PowTerm(
-                new VarFact(new Var('a')),
-                new FactTerm(new VarFact(new Var('b')))
+            right(pow(
+                toTerm(fvar(mkvar('a'))),
+                fvar(mkvar('b'))
             ))
         )
     })
     it('should parse power which contains spaces: a ^  b', function () {
         assert.deepEqual(
             runParser(Calc.term(), 'a ^  b'),
-            right(new PowTerm(
-                new VarFact(new Var('a')),
-                new FactTerm(new VarFact(new Var('b')))
+            right(pow(
+                toTerm(fvar(mkvar('a'))),
+                fvar(mkvar('b'))
             ))
         )
     })
@@ -243,39 +243,39 @@ describe('exprmd', function () {
     it('should parse multiply: 123 * 456', function () {
         assert.deepEqual(
             runParser(Calc.exprmd(), '123 * 456'),
-            right(new MultExprMD(
-                new FactTerm(new NumFact(new Num('123'))),
-                new TermExprMD(new FactTerm(new NumFact(new Num('456'))))
+            right(mult(
+                toMD(toTerm(fnum(mknum('123')))),
+                toTerm(fnum(mknum('456')))
             ))
         )
     })
     it('should parse multiply: abc * 2', function () {
         assert.deepEqual(
             runParser(Calc.exprmd(), 'abc * 2'),
-            right(new MultExprMD(
-                new FactTerm(new VarFact(new Var('abc'))),
-                new TermExprMD(new FactTerm(new NumFact(new Num('2'))))
+            right(mult(
+                toMD(toTerm(fvar(mkvar('abc')))),
+                toTerm(fnum(mknum('2')))
             ))
         )
     })
     it('should parse divide: 123 / 456', function () {
         assert.deepEqual(
             runParser(Calc.exprmd(), '123 / 456'),
-            right(new DivExprMD(
-                new FactTerm(new NumFact(new Num('123'))),
-                new TermExprMD(new FactTerm(new NumFact(new Num('456'))))
+            right(div(
+                toMD(toTerm(fnum(mknum('123')))),
+                toTerm(fnum(mknum('456')))
             ))
         )
     })
     it('should parse multiply and power', function () {
         assert.deepEqual(
             runParser(Calc.exprmd(), '123 * 456 ^ abc'),
-            right(new MultExprMD(
-                new FactTerm(new NumFact(new Num('123'))),
-                new TermExprMD(new PowTerm(
-                    new NumFact(new Num('456')),
-                    new FactTerm(new VarFact(new Var('abc')))
-                ))
+            right(mult(
+                toMD(toTerm(fnum(mknum('123')))),
+                pow(
+                    toTerm(fnum(mknum('456'))),
+                    fvar(mkvar('abc'))
+                )
             ))
         )
     })
@@ -285,59 +285,45 @@ describe('exprpm', function () {
     it('should parse plus: 123 + 456', function () {
         assert.deepEqual(
             runParser(Calc.exprpm(), '123 + 456'),
-            right(new PlusExprPM(
-                new TermExprMD(
-                    new FactTerm(
-                        new NumFact(
-                            new Num('123')))),
-                new MDExprPM(
-                    new TermExprMD(
-                        new FactTerm(
-                            new NumFact(
-                                new Num('456')))))
+            right(plus(
+                toPM(toMD(toTerm(fnum(mknum('123'))))),
+                toMD(toTerm(fnum(mknum('456'))))
             ))
         )
     })
     it('should parse plus and divide', function () {
         assert.deepEqual(
             runParser(Calc.exprpm(), '123 + 456 / 3'),
-            right(new PlusExprPM(
-                new TermExprMD(
-                    new FactTerm(
-                        new NumFact(
-                            new Num('123')))),
-                new MDExprPM(
-                    new DivExprMD(
-                        new FactTerm(
-                            new NumFact(
-                                new Num('456'))),
-                        new TermExprMD(
-                            new FactTerm(
-                                new NumFact(
-                                    new Num('3'))))
-                ))
+            right(plus(
+                toPM(toMD(toTerm(fnum(mknum('123'))))),
+                div(
+                    toMD(toTerm(fnum(mknum('456')))),
+                    toTerm(fnum(mknum('3')))
+                )
             ))
         )
     })
     it('should parse complecated expression', function () {
         assert.deepEqual(
             runParser(Calc.exprpm(), 'a * (123 + 456) / ( (b + c)*f(x, y, z) )'),
-            right(toPM(mult(
-                toTerm(fvar(mkvar('a'))),
-                div(
+            right(toPM(div(
+                mult(
+                    toMD(toTerm(fvar(mkvar('a')))),
                     toTerm(fexpr(plus(
-                        toMD(toTerm(fnum(mknum('123')))),
-                        toPM(toMD(toTerm(fnum(mknum('456')))))
-                    ))),
-                    toMD(toTerm(fexpr(toPM(mult(
-                        toTerm(fexpr(plus(
-                            toMD(toTerm(fvar(mkvar('b')))),
-                            toPM(toMD(toTerm(fvar(mkvar('c')))))))),
-                        toMD(toTerm(ffun(mkfun(
-                            mkvar('f'),
-                            [ toPM(toMD(toTerm(fvar(mkvar('x'))))),
-                              toPM(toMD(toTerm(fvar(mkvar('y'))))),
-                              toPM(toMD(toTerm(fvar(mkvar('z'))))) ])))))))))))))
+                        toPM(toMD(toTerm(fnum(mknum('123'))))),
+                        toMD(toTerm(fnum(mknum('456'))))
+                    )))
+                ),
+                toTerm(fexpr(toPM(mult(
+                    toMD(toTerm(fexpr(plus(
+                        toPM(toMD(toTerm(fvar(mkvar('b'))))),
+                        toMD(toTerm(fvar(mkvar('c')))))))),
+                    toTerm(ffun(mkfun(
+                        mkvar('f'),
+                        [ toPM(toMD(toTerm(fvar(mkvar('x'))))),
+                          toPM(toMD(toTerm(fvar(mkvar('y'))))),
+                          toPM(toMD(toTerm(fvar(mkvar('z'))))) ])))))))
+            )))
         )
     })
 })
@@ -347,8 +333,8 @@ describe('paren', function () {
         assert.deepEqual(
             runParser(Calc.paren(), '(1 + 2)'),
             right(plus(
-                toMD(toTerm(fnum(mknum('1')))),
-                toPM(toMD(toTerm(fnum(mknum('2')))))
+                toPM(toMD(toTerm(fnum(mknum('1'))))),
+                toMD(toTerm(fnum(mknum('2'))))
             ))
         )
     })
@@ -356,8 +342,9 @@ describe('paren', function () {
         assert.deepEqual(
             runParser(Calc.paren(), '(1 + 2) + 3'),
             right(plus(
-                toMD(toTerm(fnum(mknum('1')))),
-                toPM(toMD(toTerm(fnum(mknum('2')))))
+                toPM(toMD(toTerm(fnum(mknum('1'))))),
+                toMD(toTerm(fnum(mknum('2'))))
+                
             ))
         )
     })
@@ -367,29 +354,19 @@ describe('defun', function () {
     it('should parse literal of defining function', function () {
         assert.deepEqual(
             runParser(Calc.def(), 'hoge(x, y, z) = x + y + z'),
-            right(new Defun(
-                new Var('hoge'),
+            right(defun(
+                mkvar('hoge'),
                 [
-                    new Var('x'),
-                    new Var('y'),
-                    new Var('z')
+                    mkvar('x'),
+                    mkvar('y'),
+                    mkvar('z')
                 ],
-                new PlusExprPM(
-                    new TermExprMD(
-                        new FactTerm(
-                            new VarFact(
-                                new Var('x')))),
-                    new PlusExprPM(
-                        new TermExprMD(
-                            new FactTerm(
-                                new VarFact(
-                                    new Var('y')))),
-                        new MDExprPM(
-                            new TermExprMD(
-                                new FactTerm(
-                                    new VarFact(
-                                        new Var('z')))))
-                    )
+                plus(
+                    plus(
+                        toPM(toMD(toTerm(fvar(mkvar('x'))))),
+                        toMD(toTerm(fvar(mkvar('y'))))
+                    ),
+                    toMD(toTerm(fvar(mkvar('z'))))
                 )
             ))
         )
@@ -406,24 +383,14 @@ describe('defun', function () {
     it('should fail to parse literal of defining variable', function () {
         assert.deepEqual(
             runParser(Calc.def(), 'hoge = 1 + 2 + 3'),
-            right(new Defvar(
-                new Var('hoge'),
-                new PlusExprPM(
-                    new TermExprMD(
-                        new FactTerm(
-                            new NumFact(
-                                new Num('1')))),
-                    new PlusExprPM(
-                        new TermExprMD(
-                            new FactTerm(
-                                new NumFact(
-                                    new Num('2')))),
-                        new MDExprPM(
-                            new TermExprMD(
-                                new FactTerm(
-                                    new NumFact(
-                                        new Num('3')))))
-                    )
+            right(defvar(
+                mkvar('hoge'),
+                plus(
+                    plus(
+                        toPM(toMD(toTerm(fnum(mknum('1'))))),
+                        toMD(toTerm(fnum(mknum('2'))))
+                    ),
+                    toMD(toTerm(fnum(mknum('3'))))
                 )
             ))
         )

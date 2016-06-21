@@ -101,8 +101,8 @@ export function evalExprPM( expr: ExprPM ): Result {
     }
     else if( expr instanceof PlusExprPM ) {
         const p = <PlusExprPM>expr
-        return evalExprMD( p.expr1 ).flatMap(
-            x => evalExprPM( p.expr2 ).flatMap( y => {
+        return evalExprPM( p.expr1 ).flatMap(
+            x => evalExprMD( p.expr2 ).flatMap( y => {
                 try {
                     return new Right<string, number>(x + y)
                 } catch( ex ) {
@@ -112,8 +112,8 @@ export function evalExprPM( expr: ExprPM ): Result {
     }
     else if( expr instanceof MinusExprPM ) {
         const p = <MinusExprPM>expr
-        return evalExprMD( p.expr1 ).flatMap(
-            x => evalExprPM( p.expr2 ).flatMap( y => {
+        return evalExprPM( p.expr1 ).flatMap(
+            x => evalExprMD( p.expr2 ).flatMap( y => {
                 try {
                     return new Right<string, number>(x - y)
                 } catch( ex ) {
@@ -133,8 +133,8 @@ export function evalExprMD( expr: ExprMD ): Result {
     }
     else if( expr instanceof MultExprMD ) {
         const p = <MultExprMD>expr
-        return evalTerm( p.term ).flatMap(
-            x => evalExprMD( p.expr ).flatMap( y => {
+        return evalExprMD( p.expr ).flatMap(
+            x => evalTerm( p.term ).flatMap( y => {
                 try {
                     return new Right<string, number>(x * y)
                 } catch( ex ) {
@@ -144,8 +144,8 @@ export function evalExprMD( expr: ExprMD ): Result {
     }
     else if( expr instanceof DivExprMD ) {
         const p = <DivExprMD>expr
-        return evalTerm( p.term ).flatMap(
-            x => evalExprMD( p.expr ).flatMap( y => {
+        return evalExprMD( p.expr ).flatMap(
+            x => evalTerm( p.term ).flatMap( y => {
                 try {
                     return new Right<string, number>(x / y)
                 } catch( ex ) {
@@ -155,8 +155,8 @@ export function evalExprMD( expr: ExprMD ): Result {
     }
     else if( expr instanceof ModExprMD ) {
         const p = <ModExprMD>expr
-        return evalTerm( p.term ).flatMap(
-            x => evalExprMD( p.expr ).flatMap( y => {
+        return evalExprMD( p.expr ).flatMap(
+            x => evalTerm( p.term ).flatMap( y => {
                 try {
                     return new Right<string, number>(x % y)
                 } catch( ex ) {
@@ -177,8 +177,8 @@ export function evalTerm( term: Term ): Result {
     }
     else if( term instanceof PowTerm ) {
         const p = <PowTerm>term
-        return evalFact( p.base ).flatMap(
-            x => evalTerm( p.pow ).map(
+        return evalTerm( p.base ).flatMap(
+            x => evalFact( p.pow ).map(
                 y => Math.pow(x, y) ))
     }
     else return error('unkown type')

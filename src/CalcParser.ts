@@ -37,7 +37,26 @@ import { ExprPM,
          Term,
          FactTerm,
          PowTerm,
-         Statement
+         Statement,
+         toPM,
+         plus,
+         minus,
+         toMD,
+         mult,
+         div,
+         mod,
+         toTerm,
+         pow,
+         ffun,
+         fvar,
+         fnum,
+         fexpr,
+         fneg,
+         mknum,
+         mkvar,
+         mkfun,
+         defvar,
+         defun
        } from "./CalcStructure"
 
 type Char = string
@@ -132,60 +151,66 @@ export function fact(): CharParser<Fact> {
  * 累乗のパーサを生成する。
  */
 export function term(): CharParser<Term> {
-    return fact().flatMap(
-        t => spaces()
-            .bind(() => char('^'))
-            .bind(spaces)
-            .bind(term).map(
-                f => new PowTerm(t, f) )
-            .rollback()
-            .or(() => success<Char, Term>(() => new FactTerm(t))))
+    return fact()
+        .map(toTerm)
+        .flatMap(term_)
+}
+
+function term_( x: Term ): CharParser<Term> {
+    return spaces()
+        .bind(() => char('^'))
+        .bind(spaces)
+        .bind(fact)
+        .map( y => new PowTerm(x, y))
+        .flatMap(term_)
+        .rollback()
+        .or(() => success<Char, Term>(() => x) )
 }
 
 /**
  * 乗算、除算、剰余のパーサを生成する。
  */
 export function exprmd(): CharParser<ExprMD> {
-    return term().flatMap(
-        x => spaces()
-            .bind(() => char('*')
-                  .rollback()
-                  .or(() => char('/'))
-                  .rollback()
-                  .or(() => char('%')))
-            .flatMap( o => spaces()
-                      .bind(exprmd).map( y => {
-                          if( o == '*' )
-                              return new MultExprMD(x, y)
-                          else if( o == '/' )
-                              return new DivExprMD(x, y)
-                          else 
-                              return new ModExprMD(x, y)
-                      }) )
-            .rollback()
-            .or(() => success<Char, ExprMD>(
-                () => new TermExprMD(x) ) ) )
+    return term()
+        .map(toMD)
+        .flatMap(exprmd_)
+}
+
+function exprmd_( x: ExprMD ): CharParser<ExprMD> {
+    return spaces()
+        .bind(() => char('*')
+              .rollback()
+              .or(() => char('/'))
+              .rollback()
+              .or(() => char('%')))
+        .flatMap( o => spaces()
+                  .bind(term)
+                  .map( y => o == '*' ? mult(x, y) : (o == '/' ? div(x, y) : mod(x, y))))
+        .flatMap(exprmd_)
+        .rollback()
+        .or(() => success<Char, ExprMD>(() => x) )
 }
 
 /**
  * 加算、減算のパーサを生成する。
  */
 export function exprpm(): CharParser<ExprPM> {
-    return exprmd().flatMap(
-            x => spaces()
-            .bind(() => char('+')
-                  .rollback()
-                  .or(() => char('-')))
-            .flatMap( o => spaces()
-                      .bind(exprpm).map( y => {
-                          if( o == '+' )
-                              return new PlusExprPM(x, y)
-                          else
-                              return new MinusExprPM(x, y)
-                      } ) )
-            .rollback()
-            .or(() => success<Char, ExprPM>(
-                () => new MDExprPM(x) ) ) )
+    return exprmd()
+        .map(toPM)
+        .flatMap(exprpm_)
+}
+
+function exprpm_( x: ExprPM ): CharParser<ExprPM> {
+    return spaces()
+        .bind(() => char('+')
+              .rollback()
+              .or(() => char('-')))
+        .flatMap( o => spaces()
+                  .bind(exprmd)
+                  .map( y => o == '+' ? plus(x, y) : minus(x, y)))
+        .flatMap( exprpm_ )
+        .rollback()
+        .or(() => success<Char, ExprPM>(() => x) )
 }
 
 /**

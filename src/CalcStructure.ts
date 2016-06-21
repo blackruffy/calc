@@ -140,9 +140,9 @@ export class FactTerm extends Term {
 }
 
 export class PowTerm extends Term {
-    base: Fact
-    pow: Term
-    constructor( base: Fact, pow: Term ) {
+    base: Term
+    pow: Fact
+    constructor( base: Term, pow: Fact ) {
         super()
         this.base = base
         this.pow = pow
@@ -157,6 +157,7 @@ export abstract class ExprMD {
 }
 
 export class TermExprMD extends ExprMD {
+    private __termexprmd__: TermExprMD
     term: Term
     constructor( term: Term ) {
         super()
@@ -165,34 +166,35 @@ export class TermExprMD extends ExprMD {
 }
 
 export class MultExprMD extends ExprMD {
-    term: Term
+    private __multexprmd__: MultExprMD
     expr: ExprMD
-    constructor( term: Term, expr: ExprMD ) {
+    term: Term
+    constructor( expr: ExprMD, term: Term ) {
         super()
-        this.term = term
         this.expr = expr
+        this.term = term
     }
 }
 
 export class DivExprMD extends ExprMD {
     private __divexprmd__: DivExprMD;
-    term: Term
     expr: ExprMD
-    constructor( term: Term, expr: ExprMD ) {
+    term: Term
+    constructor( expr: ExprMD, term: Term ) {
         super()
-        this.term = term
         this.expr = expr
+        this.term = term
     }
 }
 
 export class ModExprMD extends ExprMD {
     private __modexprmd__: ModExprMD;
-    term: Term
     expr: ExprMD
-    constructor( term: Term, expr: ExprMD ) {
+    term: Term
+    constructor( expr: ExprMD, term: Term ) {
         super()
-        this.term = term
         this.expr = expr
+        this.term = term
     }
 }
 
@@ -204,6 +206,7 @@ export abstract class ExprPM {
 }
 
 export class MDExprPM extends ExprPM {
+    private __mdexprpm__: MDExprPM
     expr: ExprMD
     constructor( expr: ExprMD ) {
         super()
@@ -213,9 +216,9 @@ export class MDExprPM extends ExprPM {
 
 export class PlusExprPM extends ExprPM {
     private __plusexprpm__: PlusExprPM;
-    expr1: ExprMD
-    expr2: ExprPM
-    constructor( expr1: ExprMD, expr2: ExprPM ) {
+    expr1: ExprPM
+    expr2: ExprMD
+    constructor( expr1: ExprPM, expr2: ExprMD ) {
         super()
         this.expr1 = expr1
         this.expr2 = expr2 
@@ -225,9 +228,9 @@ export class PlusExprPM extends ExprPM {
 
 export class MinusExprPM extends ExprPM {
     private __minusexprpm__: MinusExprPM
-    expr1: ExprMD
-    expr2: ExprPM
-    constructor( expr1: ExprMD, expr2: ExprPM ) {
+    expr1: ExprPM
+    expr2: ExprMD
+    constructor( expr1: ExprPM, expr2: ExprMD ) {
         super()
         this.expr1 = expr1
         this.expr2 = expr2
@@ -255,11 +258,11 @@ export function toPM( md: ExprMD ): ExprPM {
     return new MDExprPM( md )
 }
 
-export function plus( expr1: ExprMD, expr2: ExprPM ): ExprPM {
+export function plus( expr1: ExprPM, expr2: ExprMD ): ExprPM {
     return new PlusExprPM( expr1, expr2 )
 }
 
-export function minus( expr1: ExprMD, expr2: ExprPM ): ExprPM {
+export function minus( expr1: ExprPM, expr2: ExprMD ): ExprPM {
     return new MinusExprPM( expr1, expr2 )
 }
 
@@ -267,23 +270,23 @@ export function toMD( term: Term ): ExprMD {
     return new TermExprMD( term )
 }
 
-export function mult( term: Term, expr: ExprMD ): ExprMD {
-    return new MultExprMD( term, expr )
+export function mult( expr: ExprMD, term: Term ): ExprMD {
+    return new MultExprMD( expr, term )
 }
 
-export function div( term: Term, expr: ExprMD ): ExprMD {
-    return new DivExprMD( term, expr )
+export function div( expr: ExprMD, term: Term ): ExprMD {
+    return new DivExprMD( expr, term )
 }
 
-export function mod( term: Term, expr: ExprMD ): ExprMD {
-    return new ModExprMD( term, expr )
+export function mod( expr: ExprMD, term: Term ): ExprMD {
+    return new ModExprMD( expr, term )
 }
 
 export function toTerm( fact: Fact ): Term {
     return new FactTerm( fact )
 }
 
-export function pow( base: Fact, pow: Term ): Term {
+export function pow( base: Term, pow: Fact ): Term {
     return new PowTerm( base, pow )
 }
 
