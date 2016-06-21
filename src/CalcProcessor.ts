@@ -48,7 +48,10 @@ type Result = Either<string, number>
  * @return 計算結果
  */
 export function evaluate( d: string ): Either<string, string | number> {
-    return parse(d).getData().flatMap( s => {
+    return parse(d)
+        .getData()
+        .mapLeft( e => `${e.getMessage()}(${e.getPosition().getCount()+1}文字目)`)
+        .flatMap( s => {
         if( s instanceof Def ) return <Either<string, string|number>>evalDef(<Def>s)
         else if( s instanceof ExprPM ) return <Either<string, string|number>>evalExprPM(<ExprPM>s)
         else return <Either<string, string|number>>error('parsed result should be Def or ExprPM')

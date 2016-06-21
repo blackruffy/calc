@@ -128,3 +128,19 @@ srcディレクトリ内のソースコードをまとめて、webapp/js/main.js
 ## API ドキュメント
 
 http://calc-1347.appspot.com/doc/index.html
+
+## Node.jsのライブラリとして使う
+
+Node.jsのライブラリとしても使えます。
+
+以下は、計算式を表現した文字列を評価して結果を返す関数`evaluate`を使用した例です。
+
+```
+import { evaluate } from "./CalcProcessor"
+
+// 式を評価する
+const r = evaluate("(1 + E*sin(PI/2))^2")
+
+// 結果を出力する
+console.log( r.getLeftOrElse( x => x.toString() ) )
+```

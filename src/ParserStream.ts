@@ -8,33 +8,34 @@ type Char = string
  * パーサに入力するA型のストリーム。
  * @param <A> ストリームが保持するデータの型
  */
-export interface Stream<A> {
+export abstract class Stream<A> {
     /**
      * 先頭のデータを取得する。
      */
-    head(): Maybe<A>;
+    abstract head(): Maybe<A>;
 
     /**
      * 先頭のデータを除いた残りのストリームを取得する。
      */
-    tail(): Stream<A>;
+    abstract tail(): Stream<A>;
 
     /**
      * ストリームの位置を取得する。
      */
-    position(): Position
+    abstract getPosition(): Position
 }
 
 /**
  * 文字のストリーム。
  */
-export class CharStream implements Stream<Char> {
+export class CharStream extends Stream<Char> {
     private doc: string
     private index: number
     private row: number
     private col: number
     
     constructor( doc: string, index: number = 0, row: number = 0, col: number = 0 ) {
+        super()
         this.doc = doc
         this.index = index
         const nl = isNewLine(doc, index)
@@ -54,7 +55,7 @@ export class CharStream implements Stream<Char> {
                               this.col + 1)
     }
     
-    position() {
+    getPosition() {
         return new Position(this.row, this.col, this.index, getLine( this.doc, this.index - this.col + 1 ) )
     }
 

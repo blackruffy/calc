@@ -4,23 +4,25 @@
  * @param <A> Leftの型
  * @param <B> Rightの型
  */
-export interface Either<A, B> {
+export abstract class Either<A, B> {
 
-    flatMap<C>( func: (b: B) => Either<A, C> ): Either<A, C>;
-    map<C>( func: (b: B) => C ): Either<A, C>;
+    abstract flatMap<C>( func: (b: B) => Either<A, C> ): Either<A, C>;
+    abstract map<C>( func: (b: B) => C ): Either<A, C>;
+    abstract mapLeft<C>( func: (a: A) => C): Either<C, B>;
     
-    getLeftOrElse( func: () => A ): A;
-    getRightOrElse( func: () => B ): B;
+    abstract getLeftOrElse( func: (b: B) => A ): A;
+    abstract getRightOrElse( func: (a: A) => B ): B;
 
-    isLeft(): boolean;
-    isRight(): boolean;
-    toString(): string;
+    abstract isLeft(): boolean;
+    abstract isRight(): boolean;
+    abstract toString(): string;
 }
 
-export class Left<A, B> implements Either<A, B> {
+export class Left<A, B> extends Either<A, B> {
     private data: A
     
     constructor( a: A ) {
+        super()
         this.data = a
     }
     
@@ -31,13 +33,17 @@ export class Left<A, B> implements Either<A, B> {
     map<C>( func: (b: B) => C ): Either<A, C> {
         return new Left<A, C>(this.data)
     }
+    
+    mapLeft<C>( func: (a: A) => C): Either<C, B> {
+        return new Left<C, B>(func(this.data))
+    }
 
-    getLeftOrElse( func: () => A ): A {
+    getLeftOrElse( func: (b: B) => A ): A {
         return this.data;
     }
     
-    getRightOrElse( func: () => B ): B {
-        return func()
+    getRightOrElse( func: (a: A) => B ): B {
+        return func(this.data)
     }
     
     isLeft(): boolean {
@@ -53,10 +59,11 @@ export class Left<A, B> implements Either<A, B> {
     }
 }
 
-export class Right<A, B> implements Either<A, B> {
+export class Right<A, B> extends Either<A, B> {
     private data: B
     
     constructor( b: B ) {
+        super()
         this.data = b
     }
     
@@ -68,11 +75,15 @@ export class Right<A, B> implements Either<A, B> {
         return new Right<A, C>(func(this.data))
     }
 
-    getLeftOrElse( func: () => A ): A {
-        return func();
+    mapLeft<C>( func: (a: A) => C): Either<C, B> {
+        return new Right<C, B>(this.data)
+    }
+
+    getLeftOrElse( func: (b: B) => A ): A {
+        return func(this.data);
     }
     
-    getRightOrElse( func: () => B ): B {
+    getRightOrElse( func: (a: A) => B ): B {
         return this.data
     }
     

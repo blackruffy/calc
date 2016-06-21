@@ -3,22 +3,23 @@
  * Maybeモナド。
  * @param <A> 保持する型
  */
-export interface Maybe<A> {
-    flatMap<B>( func: (a: A) => Maybe<B> ): Maybe<B>;
-    map<B>( func: (a: A) => B ): Maybe<B>;
-    forEach( func: (a: A) => void ): void;
-    orElse( func: () => Maybe<A> ): Maybe<A>;
-    getOrElse( func: () => A ): A;
-    getOrNull(): A;
-    toArray(): Array<A>;
-    isNothing(): boolean;
-    toString(): string;
+export abstract class Maybe<A> {
+    abstract flatMap<B>( func: (a: A) => Maybe<B> ): Maybe<B>;
+    abstract map<B>( func: (a: A) => B ): Maybe<B>;
+    abstract forEach( func: (a: A) => void ): void;
+    abstract orElse( func: () => Maybe<A> ): Maybe<A>;
+    abstract getOrElse( func: () => A ): A;
+    abstract getOrNull(): A;
+    abstract toArray(): Array<A>;
+    abstract isNothing(): boolean;
+    abstract toString(): string;
 }
 
-export class Just<A> implements Maybe<A> {
+export class Just<A> extends Maybe<A> {
     private data: A
     
     constructor( a: A ) {
+        super()
         this.data = a 
     }
     
@@ -61,8 +62,10 @@ export class Just<A> implements Maybe<A> {
 }
 
 
-export class Nothing<A> implements Maybe<A> {
-    constructor() {}
+export class Nothing<A> extends Maybe<A> {
+    constructor() {
+        super()
+    }
     
     flatMap<B>( func: (a: A) => Maybe<B> ): Maybe<B> {
         return new Nothing<B>();

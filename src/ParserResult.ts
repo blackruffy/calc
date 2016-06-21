@@ -4,54 +4,77 @@
 
 import { Stream } from "./ParserStream"
 import { Either, Right, Left } from "./Either"
+import { Position } from "./Position"
+
+/**
+ * パース失敗時のエラーを表現するクラス。
+ */
+export class Error {
+    private msg: string
+    private pos: Position
+    
+    constructor( msg: string, pos: Position ) {
+        this.msg = msg
+        this.pos = pos
+    }
+
+    getMessage(): string {
+        return this.msg 
+    }
+
+    getPosition(): Position {
+        return this.pos
+    }
+}
 
 /**
  * パース結果を表現するクラス。
  * @param <A> Streamの型
  * @param <B> パース結果の型
  */
-export interface Result<A, B> {
+export abstract class Result<A, B> {
 
     /**
      * 結果を合成する。
      */
-    flatMap<C>( func: (s: Stream<A>, b: B) => Result<A, C> ): Result<A, C>;
+    abstract flatMap<C>( func: (s: Stream<A>, b: B) => Result<A, C> ): Result<A, C>;
 
     /**
      * 結果が失敗した場合に、代わりの結果を生成する。
      */
-    orElse( func: (s: Stream<A>, e: string) => Result<A, B> ): Result<A, B>;
+    abstract orElse( func: (s: Stream<A>, e: Error) => Result<A, B> ): Result<A, B>;
 
     /**
      * 結果のデータを取得する。
      * 失敗していた場合は、代わりのデータを与える。
      */
-    getDataOrElse( func: () => B ): B;
+    abstract getDataOrElse( func: () => B ): B;
 
     /**
      * 消費されてないストリームを取得する。
      */
-    getStream(): Stream<A>;
+    abstract getStream(): Stream<A>;
 
     /**
      * 結果のデータを取得する。
      */
-    getData(): Either<string, B>;
+    abstract getData(): Either<Error, B>;
 
     /**
      * 結果が成功したか判定する。
      */
-    isSuccess(): boolean;
+    abstract isSuccess(): boolean;
 }
 
 /**
  * パースが成功した時に用いるクラス
  */
-export class Success<A, B> implements Result<A, B> {
+export class Success<A, B> extends Result<A, B> {
     private stream: Stream<A>;
     private data: B;
     
     constructor( s: Stream<A>, data: B ) {
+        super()
         this.stream = s;
         this.data = data;
     }
@@ -60,7 +83,7 @@ export class Success<A, B> implements Result<A, B> {
         return func( this.stream, this.data )
     }
 
-    orElse( func: (s: Stream<A>, e: string) => Result<A, B> ): Result<A, B> {
+    orElse( func: (s: Stream<A>, e: Error) => Result<A, B> ): Result<A, B> {
         return this;
     }
 
@@ -72,8 +95,8 @@ export class Success<A, B> implements Result<A, B> {
         return this.stream
     }
 
-    getData(): Either<string, B> {
-        return new Right<string, B>(this.data)
+    getData(): Either<Error, B> {
+        return new Right<Error, B>(this.data)
     }
     
     isSuccess() {
@@ -84,33 +107,34 @@ export class Success<A, B> implements Result<A, B> {
 /**
  * パースが失敗したときに用いるクラス
  */
-export class Failure<A, B> implements Result<A, B> {
+export class Failure<A, B> extends Result<A, B> {
     private stream: Stream<A>;
-    private msg: string;
+    private error: Error;
     
-    constructor( s: Stream<A>, msg: string ) {
+    constructor( s: Stream<A>, error: Error ) {
+        super()
         this.stream = s
-        this.msg = msg;
+        this.error = error
     }
 
     flatMap<C>( func: (s: Stream<A>, data: B) => Result<A, C> ): Result<A, C> {
-        return new Failure<A, C>(this.stream, this.msg);
+        return new Failure<A, C>(this.stream, this.error);
     }
 
-    orElse( func: (s: Stream<A>, e: string) => Result<A, B> ): Result<A, B> {
-        return func(this.stream, this.msg);
+    orElse( func: (s: Stream<A>, e: Error) => Result<A, B> ): Result<A, B> {
+        return func(this.stream, this.error);
     }
     
-    getDataOrElse( func: () => B ): B {
-        return func();
+    getDataOrElse( func: (e: Error) => B ): B {
+        return func(this.error);
     }
     
     getStream(): Stream<A> {
         return this.stream
     }
 
-    getData(): Either<string, B> {
-        return new Left<string, B>(this.msg);
+    getData(): Either<Error, B> {
+        return new Left<Error, B>(this.error);
     }
     
     isSuccess() {

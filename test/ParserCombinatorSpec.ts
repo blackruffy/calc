@@ -10,7 +10,9 @@ import { Unit, unit } from "../src/Unit"
 type Char = string
 
 function runParser<B>( p: Parser.CharParser<B>, doc: string ): Either<string, B> {
-    return p.parse(new CharStream(doc)).getData()
+    return p.parse(new CharStream(doc))
+        .getData()
+        .mapLeft( e => e.getMessage() )
 }
 
 function right<B>( b: B ): Either<string, B> {
@@ -31,7 +33,7 @@ describe('char parser', function () {
     it('should parse a charactor 2', function () {
         assert.deepEqual(
             runParser(Parser.char('a'), 'b'),
-            left('bではなくaではありませんか？')
+            left("ここでは'b'は無効です。")
         )
     })
     it('should parse a charactor 3', function () {
@@ -50,11 +52,11 @@ describe('string parser', function () {
     it('should parse string 2', function () {
         const r = Parser.str('hoge').rollback().parse(new CharStream('hello world'))
         assert.equal(
-            r.getData().getLeftOrElse(() => 'error'),
-            "hoge: eではなくoではありませんか？"
+            r.getData().mapLeft( e => e.getMessage() ).getLeftOrElse(_ => 'error'),
+            "hoge: ここでは'e'は無効です。"
         )
         assert.equal(
-            r.getStream().position().getCount(),
+            r.getStream().getPosition().getCount(),
             0
         )
     })
@@ -70,7 +72,7 @@ describe('oneOf', function () {
     it('should fail to parse none of given characters', function () {
         assert.deepEqual(
             runParser(Parser.oneOf('abcd'), 'f'),
-            left('fではなくabcdの中の１文字ではありませんか？')
+            left("ここでは'f'は無効です。")
         )
     })
 })
@@ -79,7 +81,7 @@ describe('noneOf', function () {
     it('should fail to parse one of given characters', function () {
         assert.deepEqual(
             runParser(Parser.noneOf('abcd'), 'a'),
-            left('aではなく「abcd」以外の文字ではありませんか？')
+            left("ここでは'a'は無効です。")
         )
     })
     it('should parse none of given characters', function () {
@@ -100,7 +102,7 @@ describe('alphabet', function () {
     it('should fail to parse number', function () {
         assert.deepEqual(
             runParser(Parser.alphabet(), '1'),
-            left('1ではなくアルファベットではありませんか？')
+            left("ここでは'1'は無効です。")
         )
     })
 })
@@ -115,7 +117,7 @@ describe('digit', function () {
     it('should fail to parse symbol', function () {
         assert.deepEqual(
             runParser(Parser.digit(), '-'),
-            left('-ではなく数字ではありませんか？')
+            left("ここでは'-'は無効です。")
         )
     })
 })
@@ -137,7 +139,7 @@ describe('many', function () {
     it('many 3', function () {
         assert.deepEqual(
             runParser(Parser.digit().many1(), 'abc'),
-            left('aではなく数字ではありませんか？')
+            left("ここでは'a'は無効です。")
         )
     })
     it('many 4', function () {
@@ -189,7 +191,7 @@ describe('many', function () {
     it('many 11', function () {
         assert.deepEqual(
             runParser(Parser.digit().manyStr1(), 'abc'),
-            left('aではなく数字ではありませんか？')
+            left("ここでは'a'は無効です。")
         )
     })
 })
@@ -231,7 +233,7 @@ describe('or', function () {
     it('or 2', function () {
         assert.deepEqual(
             runParser(Parser.str('abc').or(() => Parser.str('xyz')), 'xyz'),
-            left('xyz: yではなくxではありませんか？')
+            left("xyz: ここでは'y'は無効です。")
         )
     })
     it('or 3', function () {

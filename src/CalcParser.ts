@@ -10,7 +10,7 @@ import { CharParser,
          eof
        } from "./ParserCombinator"
 
-import { Result } from "./ParserResult"
+import { Result, Error } from "./ParserResult"
 import { CharStream } from "./ParserStream"
 
 import { ExprPM,
@@ -223,9 +223,9 @@ export function stmt(): CharParser<Statement> {
         .or(exprpm)
         .flatMap( s => eof<Char>()
                   .map( _ => s )
-                  .onFailure( (s, e) => '\''
-                              + s.toString()
-                              + '\'を認識できません。' ) )
+                  .onFailure( (s, e) => new Error(
+                      `'${s.toString()}'は無効な入力です。`,
+                      e.getPosition() ) ) )
         
 }
 

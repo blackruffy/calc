@@ -54,7 +54,9 @@ import { Either, Right, Left } from "../src/Either"
 type Char = string
 
 function runParser<B>( p: Parser.CharParser<B>, doc: string ): Either<string, B> {
-    return p.parse(new CharStream(doc)).getData()
+    return p.parse(new CharStream(doc))
+        .getData()
+        .mapLeft( e => e.getMessage() )
 }
 
 function right<B>( b: B ): Either<string, B> {
@@ -81,7 +83,7 @@ describe('integer', function () {
     it('should failed to parse variable', function () {
         assert.deepEqual(
             runParser(Calc.integer(), 'abc'),
-            left('aではなく数字ではありませんか？')
+            left("ここでは'a'は無効です。")
         )
     })
 })
@@ -135,7 +137,7 @@ describe('varname', function () {
     it('should fail to parse number', function () {
         assert.deepEqual(
             runParser(Calc.varname(), '1'),
-            left("1ではなく_の中の１文字ではありませんか？")
+            left("ここでは'1'は無効です。")
         )
     })
 })
@@ -397,7 +399,7 @@ describe('defun', function () {
         
         assert.deepEqual(
             runParser(Calc.def(), 'hoge(1) = 1'),
-            right("(ではなく=ではありませんか？")
+            right("ここでは'1'は無効です。")
         )
     })
     

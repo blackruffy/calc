@@ -1,5 +1,6 @@
 
 import { evaluate, clearStack } from "./CalcProcessor"
+import { Unit, unit } from "./Unit"
 
 /** 計算式の履歴を保持する配列 */
 let hist: Array<string> = []
@@ -32,7 +33,7 @@ window.onload = () => {
 /**
  * 表示を画面サイズに合わせる。
  */
-function resize(): void {
+function resize(): Unit {
     const header = document.getElementById("header")
     const main = document.getElementById("main")
 
@@ -40,18 +41,23 @@ function resize(): void {
     main.style.height = mainHeight + "px"
 
     const iwidth = window.innerWidth - document.getElementsByClassName("input-head")[0].clientWidth - 30
+    
     const its = document.getElementsByClassName("input-text")
     for( let i=0; i<its.length; i++ ) {
         (<HTMLElement>its[i]).style.width = iwidth + "px"
     }
+    
     const ots = document.getElementsByClassName("output-text")
     for( let i=0; i<ots.length; i++ ) {
         (<HTMLElement>ots[i]).style.width = iwidth + "px"
     }
+    
     const ets = document.getElementsByClassName("error-text")
     for( let i=0; i<ets.length; i++ ) {
         (<HTMLElement>ets[i]).style.width = iwidth + "px"
     }
+    
+    return unit
 }
 
 /**
@@ -131,7 +137,7 @@ function mkSection( idx: number ): void {
                 const output = <HTMLInputElement>document.getElementById(`error-text${idx}`)
                 output.value = msg
                 main.scrollTop = main.scrollHeight
-                resize()
+                return resize()
             }
             
             if( src == "" ) error("式が入力されていません。")
@@ -149,20 +155,16 @@ function mkSection( idx: number ): void {
                     
                     progLine.style.display = "none";
 
-                    // 計算式の評価結果が正常な場合
-                    if( r.isRight() ) {
+                    r.map( v => {
                         input.setAttribute("disabled", "true");
                         outputLine.style.display = "block";
                         errorLine.style.display = "none";
                         const output = <HTMLInputElement>document.getElementById(`output-text${idx}`)
-                        const o = r.getRightOrElse(() => null)
-                        output.value = o.toString()
+                        output.value = v.toString()
                         mkSection(idx + 1)
                         main.scrollTop = main.scrollHeight
-                        resize()
-                    }
-                    // エラーの場合
-                    else error(r.getLeftOrElse(() => null))
+                        return resize()
+                    }).getRightOrElse( error )
                     
                 }, 10)
             }

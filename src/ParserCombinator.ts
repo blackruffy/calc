@@ -1,6 +1,6 @@
 
 import { Stream } from "./ParserStream"
-import { Result, Success, Failure } from "./ParserResult"
+import { Result, Success, Failure, Error } from "./ParserResult"
 import { Unit, unit } from "./Unit"
 
 /**
@@ -56,7 +56,7 @@ export class Parser<A, B> {
     /**
      * パースが失敗した時のメッセージを変更する。
      */
-    onFailure( func: (s: Stream<A>, e: string) => string ): Parser<A, B> {
+    onFailure( func: (s: Stream<A>, e: Error) => Error ): Parser<A, B> {
         const self = this;
         return new Parser<A, B>( s => {
             return self.parse( s ).orElse( (s, e) => {
@@ -73,8 +73,13 @@ export class Parser<A, B> {
         return new Parser<A, B | C>(
             s => self.parse( s ).flatMap(
                 (s, d) => new Success<A, B | C>(s, d) )
-                .orElse(
-                    (s, e) => p().parse( s ) ) )
+                .orElse((s, e) => p()
+                        .parse( s )
+                        .flatMap((s, d) => new Success<A, B | C>(s, d) )
+                        .orElse((s, g) => {
+                            if( e.getPosition().getCount() > g.getPosition().getCount() ) return new Failure<A, B | C>(s, e)
+                            else return new Failure<A, B | C>(s, g)
+                        } ) ) )
     }
 
     /**
@@ -120,7 +125,7 @@ export class Parser<A, B> {
     }
 
     /**
-     * 失敗してもStreamを消費しないパーサを生成する。
+     * 失敗したらStreamを消費しないパーサを生成する。
      */
     rollback(): Parser<A, B> {
         const self = this
@@ -177,7 +182,7 @@ export function success<A, B>( b: () => B ): Parser<A, B> {
  * 必ず失敗するパーサを生成する。
  */
 export function fails<A, B>( msg: string ): Parser<A, B> {
-    return new Parser<A, B>( s => new Failure<A, B>( s, msg ) )
+    return new Parser<A, B>( s => new Failure<A, B>( s, new Error(msg, s.getPosition() ) ) )
 }
 
 /**
@@ -186,7 +191,7 @@ export function fails<A, B>( msg: string ): Parser<A, B> {
 export function eof<A>(): Parser<A, Unit> {
     return new Parser<A, Unit>(
         s => s.head().map<Result<A, Unit>>(
-            _ => new Failure<A, Unit>(s, "ストリームの最後に達していません。" ) )
+            _ => new Failure<A, Unit>(s, new Error("ストリームの最後に達していません。", s.getPosition() ) ) )
             .getOrElse( () => new Success<A, Unit>(s, unit) ) )
 }
 
@@ -195,10 +200,10 @@ function char_( func: (c: Char) => boolean, msg: string ): CharParser<Char> {
         s => s.head().map(
             c => {
                 if( func(c) ) return new Success<Char, Char>( s.tail(), c )
-                else return new Failure<Char, Char>( s.tail(), `${c}ではなく${msg}ではありませんか？` )
+                else return new Failure<Char, Char>( s.tail(), new Error(`ここでは'${c}'は無効です。`, s.getPosition()))
             })
             .getOrElse(
-                () => new Failure<Char, Char>( s, `ストリームの最後に達しました: ${msg}`) ) )
+                () => new Failure<Char, Char>( s, new Error(`'${msg}'の後にさらに入力が必要です。`, s.getPosition() ) ) ) )
 }
 
 /**
@@ -219,7 +224,7 @@ function str_( d: string, i: number ): CharParser<string> {
  * 文字列をパースする。
  */
 export function str( d: string ): CharParser<string> {
-    return str_( d, 0 ).onFailure( (s, e) => d + ': ' + e)
+    return str_( d, 0 ).onFailure( (s, e) => new Error(d + ': ' + e.getMessage(), e.getPosition()))
 }
 
 /**
