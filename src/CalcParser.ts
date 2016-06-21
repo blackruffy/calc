@@ -79,9 +79,7 @@ export function num(): CharParser<Num> {
     return integer()
         .flatMap( x => char('.')
                   .bind(integer)
-                  .map( y => new Num(x.getData()
-                                     + '.'
-                                     + y.getData()) )
+                  .map( y => new Num(`${x.getData()}.${y.getData()}`) )
                   .rollback()
                   .or( () => success<string, Num>( () => x ) ) )
 }
