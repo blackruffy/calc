@@ -88,8 +88,7 @@ export function evalDef( def: Def ): Either<string, string> {
         CallStack.getStack().head().getOrNull().getVars().set( p.name.getData(), p )
         return new Right<string, string>(`関数'${p.name.getData()}'を定義しました。`)
     }
-    else return new Left<string,
-    string>('unknown type')
+    else return new Left<string, string>('unknown type')
 }
 
 /**
