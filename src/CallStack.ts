@@ -99,7 +99,13 @@ export class CallStack {
         if( cstack.head().isNothing() ) return new Nothing<string>()
         else return cstack
             .head()
-            .flatMap( f => f.getCallee() )
+            .flatMap( f => f.getCallee()
+                      .flatMap( n => {
+                          if( n == name )
+                              return new Just(name)
+                          else
+                              return new Nothing<string>()
+                      } ) )
             .orElse( () => CallStack._findCallee( name, cstack.tail() ) )
     }
 
