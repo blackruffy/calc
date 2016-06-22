@@ -210,7 +210,6 @@ export function evalFact( fact: Fact ): Result {
  */
 export function evalFunCall( funcall: FunCall ): Result {
     const n = funcall.name.getData() // 関数名
-    console.log( n )
     // 再帰的に呼びだされているかチェックする。
     if( CallStack.findCallee( n ).isNothing() ) {
         return CallStack.findVar( n ).map( f => {
